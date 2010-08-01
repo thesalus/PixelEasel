@@ -41,7 +41,7 @@ void ImageCanvas::setScale(double newFactor)
 void ImageCanvas::scaleImage(double factor)
 {
      Q_ASSERT(this->pixmap());
-     setScale(scaleFactor*factor);
+     this->setScale(scaleFactor*factor);
 }
 
 /*
@@ -59,10 +59,8 @@ void ImageCanvas::setPenWidth(int newWidth)
 
 void ImageCanvas::refreshImage(const QImage& image)
 {
-    Q_ASSERT(this->pixmap());
-    QSize new_size = image.size()*scaleFactor;
-
-    QImage new_image = scratchpad.layOver(((Layer) image.copy()).layOver(background->copy()));
+    QSize   new_size = image.size()*scaleFactor;
+    QImage  new_image = scratchpad.layOver(((Layer) image.copy()).layOver(background->copy()));
 
     this->setPixmap(QPixmap::fromImage(new_image.scaled(new_size)));
     this->resize(new_size);
@@ -106,7 +104,7 @@ void ImageCanvas::drawLine(const QPoint &startPoint, const QPoint &endPoint, con
     painter.end();
 
     int rad = (myPenWidth / 2) + 2;
-    update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
+    this->update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
     this->refreshImage(document_m->getImage());
 }
 

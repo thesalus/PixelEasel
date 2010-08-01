@@ -13,6 +13,7 @@
 #include <QMdiArea>
 #include <QUndoGroup>
 #include <QUndoStack>
+#include <QDockWidget>
 #include <QUndoView>
 #include "ImageDocument.h"
 
@@ -34,16 +35,20 @@ private slots:
     void about();
 
     void updateActions();
+    void updateContext(QMdiSubWindow*);
+    void updateSave(bool);
 
 private:
     void createUndoView();
     void createActions();
     void createMenus();
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
+    void setupContext(ImageDocument*);
     ImageDocument *activeDocument();
 
     QScrollArea *scrollArea;
     QMdiArea *mdiArea;
+    QDockWidget *dock;
     QUndoGroup *undoGroup;
     QUndoView *undoView;
 

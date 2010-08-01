@@ -14,8 +14,8 @@ class ImageDocument : public QMdiSubWindow
 {
     Q_OBJECT
 public:
-    ImageDocument(QString, QUndoStack*);
-    ImageDocument(QSize, QUndoStack*);
+    ImageDocument(QString);
+    ImageDocument(QSize);
 
     void scaleImage(double);
     void resetScale();
@@ -27,7 +27,13 @@ public:
     const QImage &  getImage();
     QString	    getPath();
     QSize	    getSize();
+    QUndoStack *    getUndoStack();
+
     void	    setSize(QSize newSize);
+    void	    setUndoStack(QUndoStack* undoStack_);
+
+private slots:
+    void updateTitle(bool);
 
 signals:
     void imageModified(const QImage &);

@@ -12,6 +12,10 @@ PixelEasel::PixelEasel(QWidget *parent) :
     mdiArea->setBackgroundRole(QPalette::Dark);
     setCentralWidget(mdiArea);
 
+    dock = new QDockWidget(tr("Actions"), this);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, dock);
+
     createActions();
     createMenus();
     createUndoView();
@@ -37,15 +41,9 @@ void PixelEasel::newFile()
     }
     if (activeDocument() != NULL && size != activeDocument()->getSize())
 	activeDocument()->setSize(size);
-    QUndoStack *newUndoStack = new QUndoStack();
-    undoGroup->addStack(newUndoStack);
-    undoGroup->setActiveStack(newUndoStack);
-    ImageDocument* imageDocument = new ImageDocument(size, newUndoStack);
-    mdiArea->addSubWindow(imageDocument);
-    connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
-	    this,	    SLOT(updateActions()));
+    ImageDocument* imageDocument = new ImageDocument(size);
+    setupContext(imageDocument);
     imageDocument->showMaximized();
-
     updateActions();
 }
 
@@ -65,16 +63,10 @@ void PixelEasel::open()
 	    }
 	}
 	if (imageDocument == NULL) {
-	    QUndoStack *newUndoStack = new QUndoStack();
-	    undoGroup->addStack(newUndoStack);
-	    undoGroup->setActiveStack(newUndoStack);
-	    imageDocument = new ImageDocument(fileName, newUndoStack);
-	    mdiArea->addSubWindow(imageDocument);
-	    connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
-		    this,	    SLOT(updateActions()));
+	    imageDocument = new ImageDocument(fileName);
+	    setupContext(imageDocument);
 	}
 	imageDocument->showMaximized();
-
 	updateActions();
     }
 }
@@ -94,14 +86,6 @@ void PixelEasel::saveAs()
 	return;
     activeDocument()->save(fileName);
     saveAct->setEnabled(!undoGroup->isClean());
-}
-
-void PixelEasel::createUndoView()
-{
-    undoView = new QUndoView(undoGroup);
-    undoView->setWindowTitle(tr("Command List"));
-    undoView->show();
-    undoView->setAttribute(Qt::WA_QuitOnClose, false);
 }
 
 void PixelEasel::zoomIn()
@@ -220,14 +204,22 @@ void PixelEasel::createMenus()
      menuBar()->addMenu(helpMenu);
 }
 
+void PixelEasel::createUndoView()
+{
+    undoView = new QUndoView(undoGroup, dock);
+    undoView->setWindowTitle(tr("Command List"));
+    undoView->show();
+    undoView->setAttribute(Qt::WA_QuitOnClose, false);
+    dock->setWidget(undoView);
+}
+
 void PixelEasel::updateActions()
 {
-    bool hasDocument = (activeDocument() != 0);
+    bool hasDocument = (this->activeDocument() != 0);
     zoomInAct->setEnabled(hasDocument);
     zoomOutAct->setEnabled(hasDocument);
     resizeAct->setEnabled(hasDocument);
-    normalSizeAct->setEnabled(hasDocument); // check zoom levelsss
-    saveAct->setEnabled(hasDocument && !undoGroup->isClean());
+    normalSizeAct->setEnabled(hasDocument); // check zoom levels
     saveAsAct->setEnabled(hasDocument);
     /* TODO: there is a problem with this, and I'm not sure what it is.
      * it seems to think that the step after the clear state is
@@ -241,3 +233,30 @@ void PixelEasel::adjustScrollBar(QScrollBar *scrollBar, double factor)
 			    + ((factor - 1) * scrollBar->pageStep()/2)));
 }
 
+void PixelEasel::setupContext(ImageDocument* imageDocument)
+{
+    QUndoStack *newUndoStack = new QUndoStack();
+    undoGroup->addStack(newUndoStack);
+    undoGroup->setActiveStack(newUndoStack);
+    imageDocument->setUndoStack(newUndoStack);
+    mdiArea->addSubWindow(imageDocument);
+    connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
+	    this,	    SLOT(updateActions()));
+    connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
+	    this,	    SLOT(updateContext()));
+    connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
+	    this,	    SLOT(updateContext()));
+    connect(undoGroup,	    SIGNAL(cleanChanged(bool)),
+	    this,	    SLOT(updateSave(bool)));
+}
+
+void PixelEasel::updateContext(QMdiSubWindow* window)
+{
+    if (window != 0)
+	undoGroup->setActiveStack(((ImageDocument*) window)->getUndoStack());
+}
+
+void PixelEasel::updateSave(bool saveState)
+{
+    saveAct->setEnabled(!saveState);
+}

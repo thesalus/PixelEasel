@@ -3,16 +3,16 @@
 #include <iostream>
 using namespace std;
 
-ImageDocument::ImageDocument(QSize size, QUndoStack* undoStack_)
-    : fileName("Untitled"), image(size, QImage::Format_ARGB32), undoStack(undoStack_)
+ImageDocument::ImageDocument(QSize size)
+    : fileName("Untitled"), image(size, QImage::Format_ARGB32), undoStack(NULL)
 {
     image.fill(qRgba(255, 255, 255, 0));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     initialize();
 }
 
-ImageDocument::ImageDocument(QString fileName_, QUndoStack* undoStack_)
-    : fileName(fileName_), image(fileName), undoStack(undoStack_)
+ImageDocument::ImageDocument(QString fileName_)
+    : fileName(fileName_), image(fileName), undoStack(NULL)
 {
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     if (image.isNull()) {
@@ -27,8 +27,8 @@ ImageDocument::ImageDocument(QString fileName_, QUndoStack* undoStack_)
 void ImageDocument::initialize() {
     canvas = new ImageCanvas(this);
 
-    connect(this,   SIGNAL(imageModified(const QImage&)),
-	    canvas, SLOT(refreshImage(const QImage&)));
+    connect(this,	    SIGNAL(imageModified(const QImage&)),
+	    canvas,	    SLOT(refreshImage(const QImage&)));
 
     scrollArea = new QScrollArea;
     scrollArea->setBackgroundRole(QPalette::Base);
@@ -40,7 +40,7 @@ void ImageDocument::initialize() {
     this->setWindowTitle(fileName.split("/").last());
     this->resize(128, 128);
     canvas->show();
-    makeChange();
+    this->makeChange();
 }
 
 void ImageDocument::scaleImage(double scaleFactor)
@@ -58,7 +58,7 @@ void ImageDocument::save(QString file)
     if (file.isEmpty())
 	file = fileName;
     if (this->image.save(file, "PNG")) {
-	if (!undoStack->isClean())
+	if (undoStack != NULL && !undoStack->isClean())
 	    undoStack->setClean();
 	fileName = file;
     }
@@ -80,23 +80,15 @@ QSize ImageDocument::getSize()
     return image.size();
 }
 
-void ImageDocument::setSize(QSize newSize)
+QUndoStack* ImageDocument::getUndoStack()
 {
-    Layer newImage(newSize, QImage::Format_RGB32);
-    QPainter painter(&newImage);
-    painter.drawImage(QPoint(0,0),image);
-    painter.end();
-    AddCommand * command = new AddCommand(image, newImage, this);
-    command->setText("Resize Image");
-    undoStack->push(command);
-    image = newImage;
-    makeChange();
+    return undoStack;
 }
 
 void ImageDocument::replaceImage(QImage new_image)
 {
     image = new_image;
-    makeChange();
+    this->makeChange();
 }
 
 void ImageDocument::drawImage(QImage new_image)
@@ -104,7 +96,7 @@ void ImageDocument::drawImage(QImage new_image)
     QPainter painter(&image);
     painter.drawImage(QPoint(0,0), new_image);
     painter.end();
-    makeChange();
+    this->makeChange();
 }
 
 void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
@@ -114,17 +106,47 @@ void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
     painter.setPen(pen);
     painter.drawLines(pointPairs);
     painter.end();
-    AddCommand * command = new AddCommand(old_image, image, this);
-    command->setText("Draw Line");
-    undoStack->push(command);
-    makeChange();
+    if (undoStack != NULL)
+    {
+	AddCommand * command = new AddCommand(old_image, image, this);
+	command->setText("Draw Line");
+	undoStack->push(command);
+    }
+    this->makeChange();
 }
 
 void ImageDocument::makeChange()
 {
+    emit imageModified(image);
+}
+
+void ImageDocument::updateTitle(bool state)
+{
     QString title = fileName.split("/").last();
-    if (!undoStack->isClean())
+    if (!state)
 	title += "*";
     this->setWindowTitle(title);
-    emit imageModified(image);
+}
+
+void ImageDocument::setSize(QSize newSize)
+{
+    Layer newImage(newSize, QImage::Format_RGB32);
+    QPainter painter(&newImage);
+    painter.drawImage(QPoint(0,0),image);
+    painter.end();
+    if (undoStack != NULL)
+    {
+	AddCommand * command = new AddCommand(image, newImage, this);
+	command->setText("Resize Image");
+	undoStack->push(command);
+    }
+    image = newImage;
+    this->makeChange();
+}
+
+void ImageDocument::setUndoStack(QUndoStack* undoStack_)
+{
+    undoStack = undoStack_;
+    connect(undoStack,	    SIGNAL(cleanChanged(bool)),
+	    this,	    SLOT(updateTitle(bool)));
 }
