@@ -7,6 +7,8 @@
 #include <QMouseEvent>
 #include "Tool.h"
 #include "PenTool.h"
+#include "Layer.h"
+#include "BackgroundLayer.h"
 
 class ImageDocument;
 
@@ -14,7 +16,7 @@ class ImageCanvas : public QLabel
 {
     Q_OBJECT
 public:
-    ImageCanvas(ImageDocument *doc);
+    ImageCanvas(ImageDocument *document);
     void scaleImage(double factor);
     void resetScale();
     void setPenColor(const QColor &);
@@ -38,8 +40,9 @@ private:
     void refreshScratchpad();
     void resizeImage(QImage *image, const QSize &newSize);
 
-    ImageDocument * doc;
-    QImage	    scratchpad;
+    ImageDocument * document_m;
+    BackgroundLayer*background;
+    Layer	    scratchpad;
 
     double	    scaleFactor;
 

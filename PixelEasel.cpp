@@ -44,6 +44,9 @@ void PixelEasel::newFile()
     mdiArea->addSubWindow(imageDocument);
     connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
 	    this,	    SLOT(updateActions()));
+    imageDocument->showMaximized();
+
+    updateActions();
 }
 
 void PixelEasel::open()

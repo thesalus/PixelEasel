@@ -1,5 +1,26 @@
 #include "Layer.h"
 
-Layer::Layer()
+Layer::Layer(QImage image)
+    : QImage(image)
 {
+}
+
+Layer::Layer(const QString & fileName, const char* format)
+    : QImage(fileName, format)
+{
+}
+
+Layer::Layer(const QSize & size, QImage::Format format)
+    : QImage(size, format)
+{
+    this->fill(qRgba(255, 255, 255, 0));
+}
+
+QImage Layer::layOver (QImage bottomLayer)
+{
+    QPainter painter(&bottomLayer);
+    painter.drawImage(QPoint(0,0),(*this));
+    painter.end();
+
+    return bottomLayer;
 }

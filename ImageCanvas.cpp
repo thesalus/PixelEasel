@@ -1,10 +1,13 @@
 #include "ImageCanvas.h"
 #include "ImageDocument.h"
 #include <iostream>
+#include "SolidBackgroundLayer.h"
 using namespace std;
 
-ImageCanvas::ImageCanvas(ImageDocument* _doc)
-    : doc(_doc)
+ImageCanvas::ImageCanvas(ImageDocument* document)
+    :	document_m(document),
+	background(new SolidBackgroundLayer(document_m->getSize(), Qt::green)),
+	scratchpad(document_m->size(), QImage::Format_ARGB32)
 {
     this->setBackgroundRole(QPalette::Base);
     this->setStyleSheet("QLabel { background-color: #999999 }");
@@ -12,8 +15,8 @@ ImageCanvas::ImageCanvas(ImageDocument* _doc)
     myPenWidth = 1;
     myPenColor = Qt::black;
     scaleFactor = 1.0;
-    currentTool = new PenTool(this, QPen(myPenColor, myPenWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    this->refreshScratchpad();
+    currentTool = new PenTool(this, QPen(myPenColor, myPenWidth, Qt::SolidLine,
+					 Qt::RoundCap, Qt::RoundJoin));
 }
 
 /*
@@ -31,7 +34,7 @@ void ImageCanvas::setScale(double newFactor)
     //  zoomInAct->setEnabled(scaleFactor < 3.0);
     //  zoomOutAct->setEnabled(scaleFactor > 0.333);
     this->refreshScratchpad();
-    this->refreshImage(doc->getImage());
+    this->refreshImage(document_m->getImage());
 }
 
 // don't need to let users scale by a constant factor
@@ -56,11 +59,10 @@ void ImageCanvas::setPenWidth(int newWidth)
 
 void ImageCanvas::refreshImage(const QImage& image)
 {
+    Q_ASSERT(this->pixmap());
     QSize new_size = image.size()*scaleFactor;
 
-    QImage new_image = image.copy();
-    QPainter painter(&new_image);
-    painter.drawImage(QPoint(0,0),scratchpad);
+    QImage new_image = scratchpad.layOver(((Layer) image.copy()).layOver(background->copy()));
 
     this->setPixmap(QPixmap::fromImage(new_image.scaled(new_size)));
     this->resize(new_size);
@@ -69,7 +71,7 @@ void ImageCanvas::refreshImage(const QImage& image)
 
 void ImageCanvas::refreshScratchpad()
 {
-    scratchpad = QImage(doc->size()*scaleFactor, QImage::Format_ARGB32);
+    scratchpad = Layer(document_m->size()*scaleFactor, QImage::Format_ARGB32);
 }
 
 QPoint ImageCanvas::getPoint(QMouseEvent *event)
@@ -101,14 +103,15 @@ void ImageCanvas::drawLine(const QPoint &startPoint, const QPoint &endPoint, con
     QPainter painter(&scratchpad);
     painter.setPen(pen);
     painter.drawLine(startPoint, endPoint);
+    painter.end();
 
     int rad = (myPenWidth / 2) + 2;
     update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
-    this->refreshImage(doc->getImage());
+    this->refreshImage(document_m->getImage());
 }
 
 void ImageCanvas::commitLines(const QVector<QPoint> &pointPairs, const QPen &pen)
 {
-    doc->drawLines(pen, pointPairs);
+    document_m->drawLines(pen, pointPairs);
     this->refreshScratchpad();
 }

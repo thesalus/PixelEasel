@@ -2,11 +2,16 @@
 #define LAYER_H
 
 #include <QImage>
+#include <QPainter>
 
 class Layer : public QImage
 {
 public:
-    Layer();
+    Layer(QImage image);
+    Layer (const QString & fileName, const char* format = 0);
+    Layer (const QSize & size, QImage::Format format);
+
+    QImage layOver (QImage bottomLayer);
 };
 
 #endif // LAYER_H

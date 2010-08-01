@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include "ImageCanvas.h"
 #include <QUndoStack>
+#include "Layer.h"
 class ImageCanvas;
 
 class ImageDocument : public QMdiSubWindow
@@ -18,6 +19,7 @@ public:
 
     void scaleImage(double);
     void resetScale();
+    void replaceImage(QImage new_image);
     void drawImage(QImage new_image);
     void drawLines(QPen pen, QVector<QPoint> pointPairs);
     void save(QString file = NULL);
@@ -31,8 +33,8 @@ signals:
     void imageModified(const QImage &);
 
 private:
-    QString	    filename;
-    QImage	    image;
+    QString	    fileName;
+    Layer	    image;
     ImageCanvas*    canvas;
     QScrollArea*    scrollArea;
     QUndoStack*	    undoStack;

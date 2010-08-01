@@ -4,27 +4,24 @@
 using namespace std;
 
 ImageDocument::ImageDocument(QSize size, QUndoStack* undoStack_)
-    : filename("Untitled"), undoStack(undoStack_)
+    : fileName("Untitled"), image(size, QImage::Format_ARGB32), undoStack(undoStack_)
 {
+    image.fill(qRgba(255, 255, 255, 0));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
-
-    image = QImage(size, QImage::Format_RGB32);
     initialize();
 }
 
-ImageDocument::ImageDocument(QString filename_, QUndoStack* undoStack_)
-    : filename(filename_), undoStack(undoStack_)
+ImageDocument::ImageDocument(QString fileName_, QUndoStack* undoStack_)
+    : fileName(fileName_), image(fileName), undoStack(undoStack_)
 {
     this->setAttribute(Qt::WA_DeleteOnClose, true);
-
-    image = QImage(filename);
     if (image.isNull()) {
 	QMessageBox::information(this, tr("Image Canvas"),
-				 tr("Cannot load %1.").arg(filename));
+				 tr("Cannot load %1.").arg(fileName));
 	this->close();
-	return;
+    } else {
+	initialize();
     }
-    initialize();
 }
 
 void ImageDocument::initialize() {
@@ -40,7 +37,7 @@ void ImageDocument::initialize() {
     scrollArea->setWidget(canvas);
 
     this->setWidget(scrollArea);
-    this->setWindowTitle(filename.split("/").last());
+    this->setWindowTitle(fileName.split("/").last());
     this->resize(128, 128);
     canvas->show();
     makeChange();
@@ -59,11 +56,11 @@ void ImageDocument::resetScale()
 void ImageDocument::save(QString file)
 {
     if (file.isEmpty())
-	file = filename;
+	file = fileName;
     if (this->image.save(file, "PNG")) {
 	if (!undoStack->isClean())
 	    undoStack->setClean();
-	filename = file;
+	fileName = file;
     }
     makeChange();
 }
@@ -75,7 +72,7 @@ const QImage & ImageDocument::getImage()
 
 QString ImageDocument::getPath()
 {
-    return filename;
+    return fileName;
 }
 
 QSize ImageDocument::getSize()
@@ -85,7 +82,7 @@ QSize ImageDocument::getSize()
 
 void ImageDocument::setSize(QSize newSize)
 {
-    QImage newImage(newSize, QImage::Format_RGB32);
+    Layer newImage(newSize, QImage::Format_RGB32);
     QPainter painter(&newImage);
     painter.drawImage(QPoint(0,0),image);
     painter.end();
@@ -93,6 +90,12 @@ void ImageDocument::setSize(QSize newSize)
     command->setText("Resize Image");
     undoStack->push(command);
     image = newImage;
+    makeChange();
+}
+
+void ImageDocument::replaceImage(QImage new_image)
+{
+    image = new_image;
     makeChange();
 }
 
@@ -119,7 +122,7 @@ void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
 
 void ImageDocument::makeChange()
 {
-    QString title = filename.split("/").last();
+    QString title = fileName.split("/").last();
     if (!undoStack->isClean())
 	title += "*";
     this->setWindowTitle(title);

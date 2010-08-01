@@ -7,10 +7,10 @@ AddCommand::AddCommand(QImage old_image, QImage new_image, ImageDocument * docum
 
 void AddCommand::redo()
 {
-    document->drawImage(newImage);
+    document->replaceImage(newImage);
 }
 
 void AddCommand::undo()
 {
-    document->drawImage(oldImage);
+    document->replaceImage(oldImage);
 }

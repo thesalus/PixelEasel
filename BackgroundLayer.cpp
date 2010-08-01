@@ -1,5 +1,6 @@
 #include "BackgroundLayer.h"
 
-BackgroundLayer::BackgroundLayer()
+BackgroundLayer::BackgroundLayer(Pattern pattern, QSize size)
+    : Layer(size, QImage::Format_ARGB32_Premultiplied), pattern_m(pattern)
 {
 }
