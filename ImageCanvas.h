@@ -9,10 +9,9 @@
 #include "PenTool.h"
 #include "Layer.h"
 #include "BackgroundLayer.h"
+#include "ImageView.h"
 
-class ImageDocument;
-
-class ImageCanvas : public QLabel
+class ImageCanvas : public ImageView
 {
     Q_OBJECT
 public:
@@ -21,11 +20,6 @@ public:
     void resetScale();
     void setPenColor(const QColor &);
     void setPenWidth(int);
-    QPoint getPoint(QMouseEvent *event);
-
-    void drawLine(const QPoint &startPoint, const QPoint &endPoint, const QPen &pen);
-
-    void commitLines(const QVector<QPoint> &pointPairs, const QPen &pen);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -37,12 +31,10 @@ public slots:
 
 private:
     void setScale(double factor);
-    void refreshScratchpad();
+    QPoint normalizePoint(QPoint point);
     void resizeImage(QImage *image, const QSize &newSize);
 
-    ImageDocument * document_m;
     BackgroundLayer*background;
-    Layer	    scratchpad;
 
     double	    scaleFactor;
 

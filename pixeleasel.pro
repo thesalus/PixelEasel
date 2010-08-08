@@ -8,7 +8,8 @@ SOURCES += main.cpp \
     PenTool.cpp \
     Layer.cpp \
     BackgroundLayer.cpp \
-    SolidBackgroundLayer.cpp
+    SolidBackgroundLayer.cpp \
+    ImageView.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
@@ -19,7 +20,8 @@ HEADERS += PixelEasel.h \
     PenTool.h \
     Layer.h \
     BackgroundLayer.h \
-    SolidBackgroundLayer.h
+    SolidBackgroundLayer.h \
+    ImageView.h
 HEADERS += ResizeDialog.h
 HEADERS += Commands.h
 HEADERS += ImageCanvas.h

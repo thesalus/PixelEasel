@@ -4,10 +4,9 @@
 #include "SolidBackgroundLayer.h"
 using namespace std;
 
-ImageCanvas::ImageCanvas(ImageDocument* document)
-    :	document_m(document),
-	background(new SolidBackgroundLayer(document_m->getSize(), Qt::green)),
-	scratchpad(document_m->size(), QImage::Format_ARGB32)
+ImageCanvas::ImageCanvas(ImageDocument* document) :
+    ImageView(document),
+    background(new SolidBackgroundLayer(document_m->getSize(), Qt::green))
 {
     this->setBackgroundRole(QPalette::Base);
     this->setStyleSheet("QLabel { background-color: #999999 }");
@@ -15,7 +14,7 @@ ImageCanvas::ImageCanvas(ImageDocument* document)
     myPenWidth = 1;
     myPenColor = Qt::black;
     scaleFactor = 1.0;
-    currentTool = new PenTool(this, QPen(myPenColor, myPenWidth, Qt::SolidLine,
+    currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
 					 Qt::RoundCap, Qt::RoundJoin));
 }
 
@@ -33,8 +32,9 @@ void ImageCanvas::setScale(double newFactor)
     //  TODO: Need to find a way to pass this up to the main window, or set it as an internal state that the main window polls
     //  zoomInAct->setEnabled(scaleFactor < 3.0);
     //  zoomOutAct->setEnabled(scaleFactor > 0.333);
-    this->refreshScratchpad();
-    this->refreshImage(document_m->getImage());
+    QImage * newImage = document_m->getImage();
+    this->refreshImage(*newImage);
+    delete newImage;	
 }
 
 // don't need to let users scale by a constant factor
@@ -60,56 +60,38 @@ void ImageCanvas::setPenWidth(int newWidth)
 void ImageCanvas::refreshImage(const QImage& image)
 {
     QSize   new_size = image.size()*scaleFactor;
-    QImage  new_image = scratchpad.layOver(((Layer) image.copy()).layOver(background->copy()));
+    QImage  new_image = ((Layer) image.copy()).layOver(background->copy());
 
     this->setPixmap(QPixmap::fromImage(new_image.scaled(new_size)));
     this->resize(new_size);
     this->repaint();
 }
 
-void ImageCanvas::refreshScratchpad()
+QPoint ImageCanvas::normalizePoint(QPoint point)
 {
-    scratchpad = Layer(document_m->size()*scaleFactor, QImage::Format_ARGB32);
-}
-
-QPoint ImageCanvas::getPoint(QMouseEvent *event)
-{
-    QPoint original = event->pos();
-    return original/scaleFactor;
+    return point/scaleFactor;
 }
 
 void ImageCanvas::mousePressEvent(QMouseEvent *event)
 {
-    currentTool->mousePressEvent(event);
+    QMouseEvent *adjustedEvent =
+	    new QMouseEvent(event->type(), normalizePoint(event->pos()),event->button(),event->buttons(),event->modifiers());
+    currentTool->mousePressEvent(adjustedEvent);
+    delete adjustedEvent;
 }
 
 void ImageCanvas::mouseMoveEvent(QMouseEvent *event)
 {
-    currentTool->mouseMoveEvent(event);
+    QMouseEvent *adjustedEvent =
+	    new QMouseEvent(event->type(), normalizePoint(event->pos()),event->button(),event->buttons(),event->modifiers());
+    currentTool->mouseMoveEvent(adjustedEvent);
+    delete adjustedEvent;
 }
 
 void ImageCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    currentTool->mouseReleaseEvent(event);
-}
-
-/*
- * Edit Actions
- */
-void ImageCanvas::drawLine(const QPoint &startPoint, const QPoint &endPoint, const QPen &pen)
-{
-    QPainter painter(&scratchpad);
-    painter.setPen(pen);
-    painter.drawLine(startPoint, endPoint);
-    painter.end();
-
-    int rad = (myPenWidth / 2) + 2;
-    this->update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
-    this->refreshImage(document_m->getImage());
-}
-
-void ImageCanvas::commitLines(const QVector<QPoint> &pointPairs, const QPen &pen)
-{
-    document_m->drawLines(pen, pointPairs);
-    this->refreshScratchpad();
+    QMouseEvent *adjustedEvent =
+	    new QMouseEvent(event->type(), normalizePoint(event->pos()),event->button(),event->buttons(),event->modifiers());
+    currentTool->mouseReleaseEvent(adjustedEvent);
+    delete adjustedEvent;
 }

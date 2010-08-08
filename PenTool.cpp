@@ -1,17 +1,17 @@
 #include "PenTool.h"
-#include "ImageCanvas.h"
+#include "ImageDocument.h"
 #include <iostream>
 using namespace std;
 
-PenTool::PenTool(ImageCanvas* canvas, QPen pen_)
-    : imageCanvas(canvas), scribbling(false), pen(pen_)
+PenTool::PenTool(ImageDocument* document, QPen pen)
+    : document_m(document), scribbling(false), pen_m(pen)
 {
 }
 
 void PenTool::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-	lastPoint = imageCanvas->getPoint(event);
+	lastPoint = event->pos();
 	scribbling = true;
     }
 }
@@ -19,8 +19,8 @@ void PenTool::mousePressEvent(QMouseEvent *event)
 void PenTool::mouseMoveEvent(QMouseEvent *event)
 {
     if ((event->buttons() & Qt::LeftButton) && scribbling) {
-	QPoint nextPoint = imageCanvas->getPoint(event);
-	imageCanvas->drawLine(lastPoint, nextPoint, pen);
+	QPoint nextPoint = event->pos();
+	document_m->scratchLine(pen_m, lastPoint, nextPoint);
 	pointPairs.push_back(lastPoint);
 	pointPairs.push_back(nextPoint);
 	lastPoint = nextPoint;
@@ -30,9 +30,9 @@ void PenTool::mouseMoveEvent(QMouseEvent *event)
 void PenTool::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton && scribbling) {
-	lastPoint = imageCanvas->getPoint(event);
+	lastPoint = event->pos();
 	scribbling = false;
-	imageCanvas->commitLines(pointPairs, pen);
+	document_m->drawLines(pen_m, pointPairs);
 	pointPairs.clear();
     }
 }

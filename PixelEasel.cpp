@@ -30,7 +30,7 @@ PixelEasel::~PixelEasel()
 
 void PixelEasel::newFile()
 {
-    // Throw in random defaults
+    // Throw in sane defaults
     ResizeDialog* rd = new ResizeDialog(QSize(64,64), this);
     rd->setModal(true);
     QSize size;
@@ -221,10 +221,6 @@ void PixelEasel::updateActions()
     resizeAct->setEnabled(hasDocument);
     normalSizeAct->setEnabled(hasDocument); // check zoom levels
     saveAsAct->setEnabled(hasDocument);
-    /* TODO: there is a problem with this, and I'm not sure what it is.
-     * it seems to think that the step after the clear state is
-     * the clear state. (the save action does)
-     */
 }
 
 void PixelEasel::adjustScrollBar(QScrollBar *scrollBar, double factor)
@@ -243,9 +239,9 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
     connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
 	    this,	    SLOT(updateActions()));
     connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
-	    this,	    SLOT(updateContext()));
+	    this,	    SLOT(updateContext(QMdiSubWindow*)));
     connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
-	    this,	    SLOT(updateContext()));
+	    this,	    SLOT(updateContext(QMdiSubWindow*)));
     connect(undoGroup,	    SIGNAL(cleanChanged(bool)),
 	    this,	    SLOT(updateSave(bool)));
 }

@@ -6,22 +6,22 @@
 #include <QVector>
 
 #include <QPen>
-class ImageCanvas;
+class ImageDocument;
 
 class PenTool : public Tool
 {
 public:
-    PenTool(ImageCanvas* canvas, QPen pen_);
+    PenTool(ImageDocument* document, QPen pen);
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
 private:
 
-    ImageCanvas *imageCanvas;
+    ImageDocument * document_m;
     QVector<QPoint> pointPairs;
-    bool scribbling;
-    QPoint lastPoint;
-    QPen pen;
+    bool	    scribbling;
+    QPoint	    lastPoint;
+    QPen	    pen_m;
 };
 
 #endif // PENTOOL_H

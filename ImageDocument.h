@@ -16,15 +16,17 @@ class ImageDocument : public QMdiSubWindow
 public:
     ImageDocument(QString);
     ImageDocument(QSize);
+    ~ImageDocument();
 
     void scaleImage(double);
     void resetScale();
     void replaceImage(QImage new_image);
     void drawImage(QImage new_image);
     void drawLines(QPen pen, QVector<QPoint> pointPairs);
+    void scratchLine(QPen pen, QPoint startPoint, QPoint endPoint);
     void save(QString file = NULL);
 
-    const QImage &  getImage();
+    QImage *	    getImage();
     QString	    getPath();
     QSize	    getSize();
     QUndoStack *    getUndoStack();
@@ -41,6 +43,7 @@ signals:
 private:
     QString	    fileName;
     Layer	    image;
+    Layer	    scratchpad;
     ImageCanvas*    canvas;
     QScrollArea*    scrollArea;
     QUndoStack*	    undoStack;

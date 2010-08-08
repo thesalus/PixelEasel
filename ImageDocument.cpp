@@ -4,7 +4,10 @@
 using namespace std;
 
 ImageDocument::ImageDocument(QSize size)
-    : fileName("Untitled"), image(size, QImage::Format_ARGB32), undoStack(NULL)
+    :	fileName("Untitled"),
+	image(size, QImage::Format_ARGB32),
+	scratchpad(size, QImage::Format_ARGB32),
+	undoStack(NULL)
 {
     image.fill(qRgba(255, 255, 255, 0));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -12,7 +15,10 @@ ImageDocument::ImageDocument(QSize size)
 }
 
 ImageDocument::ImageDocument(QString fileName_)
-    : fileName(fileName_), image(fileName), undoStack(NULL)
+    :	fileName(fileName_),
+	image(fileName),
+	scratchpad(image.size(), QImage::Format_ARGB32),
+	undoStack(NULL)
 {
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     if (image.isNull()) {
@@ -24,7 +30,8 @@ ImageDocument::ImageDocument(QString fileName_)
     }
 }
 
-void ImageDocument::initialize() {
+void ImageDocument::initialize()
+{
     canvas = new ImageCanvas(this);
 
     connect(this,	    SIGNAL(imageModified(const QImage&)),
@@ -41,6 +48,13 @@ void ImageDocument::initialize() {
     this->resize(128, 128);
     canvas->show();
     this->makeChange();
+}
+
+ImageDocument::~ImageDocument()
+{
+    delete undoStack;
+    delete canvas;
+    delete scrollArea;
 }
 
 void ImageDocument::scaleImage(double scaleFactor)
@@ -65,9 +79,11 @@ void ImageDocument::save(QString file)
     makeChange();
 }
 
-const QImage & ImageDocument::getImage()
+QImage* ImageDocument::getImage()
 {
-    return image;
+//    scratchpad = Layer(image.size(), QImage::Format_ARGB32);
+    QImage *new_image = new QImage(scratchpad.layOver(((Layer) image.copy())));
+    return new_image;
 }
 
 QString ImageDocument::getPath()
@@ -112,12 +128,25 @@ void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
 	command->setText("Draw Line");
 	undoStack->push(command);
     }
+    scratchpad = Layer(image.size(), QImage::Format_ARGB32);
+    this->makeChange();
+}
+
+void ImageDocument::scratchLine(QPen pen, QPoint startPoint, QPoint endPoint)
+{
+    QPainter painter(&scratchpad);
+    painter.setPen(pen);
+    painter.drawLine(startPoint, endPoint);
+    painter.end();
+    //    int rad = (pen.width() / 2) + 2;
+    //    this->update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
+
     this->makeChange();
 }
 
 void ImageDocument::makeChange()
 {
-    emit imageModified(image);
+    emit imageModified(scratchpad.layOver(((Layer) image.copy())));
 }
 
 void ImageDocument::updateTitle(bool state)
