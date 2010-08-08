@@ -5,37 +5,43 @@ using namespace std;
 
 ImageDocument::ImageDocument(QSize size)
     :	fileName("Untitled"),
-	image(size, QImage::Format_ARGB32),
+	imageIndex(0),
 	scratchpad(size, QImage::Format_ARGB32),
 	undoStack(NULL)
 {
+    QImage image(size, QImage::Format_ARGB32);
     image.fill(qRgba(255, 255, 255, 0));
+    imageLayers << (new Layer(image));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     initialize();
 }
 
 ImageDocument::ImageDocument(QString fileName_)
     :	fileName(fileName_),
-	image(fileName),
-	scratchpad(image.size(), QImage::Format_ARGB32),
+	imageIndex(0),
+	scratchpad(QSize(1,1), QImage::Format_ARGB32),
 	undoStack(NULL)
 {
+    QImage image(fileName);
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     if (image.isNull()) {
 	QMessageBox::information(this, tr("Image Canvas"),
 				 tr("Cannot load %1.").arg(fileName));
 	this->close();
     } else {
+	scratchpad = QImage(image.size(), QImage::Format_ARGB32);
+	scratchpad.fill(qRgba(255, 255, 255, 0));
+	imageLayers << (new Layer(image));
 	initialize();
     }
 }
 
 void ImageDocument::initialize()
 {
-    canvas = new ImageCanvas(this);
-
+    ImageCanvas *canvas = new ImageCanvas(this);
     connect(this,	    SIGNAL(imageModified(const QImage&)),
 	    canvas,	    SLOT(refreshImage(const QImage&)));
+    views << canvas;
 
     scrollArea = new QScrollArea;
     scrollArea->setBackgroundRole(QPalette::Base);
@@ -53,25 +59,25 @@ void ImageDocument::initialize()
 ImageDocument::~ImageDocument()
 {
     delete undoStack;
-    delete canvas;
     delete scrollArea;
 }
 
 void ImageDocument::scaleImage(double scaleFactor)
 {
-    canvas->scaleImage(scaleFactor);
+    // TODO: how do we do this part? separate subwindow?
+    ((ImageCanvas*) views.first())->scaleImage(scaleFactor);
 }
 
 void ImageDocument::resetScale()
 {
-    canvas->resetScale();
+    ((ImageCanvas*) views.first())->resetScale();
 }
 
 void ImageDocument::save(QString file)
 {
     if (file.isEmpty())
 	file = fileName;
-    if (this->image.save(file, "PNG")) {
+    if (this->getImage()->save(file, "PNG")) {
 	if (undoStack != NULL && !undoStack->isClean())
 	    undoStack->setClean();
 	fileName = file;
@@ -82,7 +88,11 @@ void ImageDocument::save(QString file)
 QImage* ImageDocument::getImage()
 {
 //    scratchpad = Layer(image.size(), QImage::Format_ARGB32);
-    QImage *new_image = new QImage(scratchpad.layOver(((Layer) image.copy())));
+    Layer image(scratchpad.size(),  QImage::Format_ARGB32);
+    for (int i = 0; i < imageLayers.size(); ++i) {
+	image = imageLayers.at(i)->layOver(image);
+    }
+    QImage *new_image = new QImage(scratchpad.layOver(image));
     return new_image;
 }
 
@@ -93,7 +103,7 @@ QString ImageDocument::getPath()
 
 QSize ImageDocument::getSize()
 {
-    return image.size();
+    return scratchpad.size();
 }
 
 QUndoStack* ImageDocument::getUndoStack()
@@ -103,13 +113,13 @@ QUndoStack* ImageDocument::getUndoStack()
 
 void ImageDocument::replaceImage(QImage new_image)
 {
-    image = new_image;
+    imageLayers.replace(imageIndex, new Layer(new_image));
     this->makeChange();
 }
 
 void ImageDocument::drawImage(QImage new_image)
 {
-    QPainter painter(&image);
+    QPainter painter(imageLayers.at(imageIndex));
     painter.drawImage(QPoint(0,0), new_image);
     painter.end();
     this->makeChange();
@@ -117,18 +127,18 @@ void ImageDocument::drawImage(QImage new_image)
 
 void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
 {
-    QImage old_image = image.copy();
-    QPainter painter(&image);
+    QImage old_image = imageLayers.at(imageIndex)->copy();
+    QPainter painter(imageLayers.at(imageIndex));
     painter.setPen(pen);
     painter.drawLines(pointPairs);
     painter.end();
     if (undoStack != NULL)
     {
-	AddCommand * command = new AddCommand(old_image, image, this);
+	AddCommand * command = new AddCommand(old_image, *imageLayers.at(imageIndex), this);
 	command->setText("Draw Line");
 	undoStack->push(command);
     }
-    scratchpad = Layer(image.size(), QImage::Format_ARGB32);
+    scratchpad = Layer(imageLayers.at(imageIndex)->size(), QImage::Format_ARGB32);
     this->makeChange();
 }
 
@@ -146,7 +156,7 @@ void ImageDocument::scratchLine(QPen pen, QPoint startPoint, QPoint endPoint)
 
 void ImageDocument::makeChange()
 {
-    emit imageModified(scratchpad.layOver(((Layer) image.copy())));
+    emit imageModified(*getImage());
 }
 
 void ImageDocument::updateTitle(bool state)
@@ -161,15 +171,15 @@ void ImageDocument::setSize(QSize newSize)
 {
     Layer newImage(newSize, QImage::Format_RGB32);
     QPainter painter(&newImage);
-    painter.drawImage(QPoint(0,0),image);
+    painter.drawImage(QPoint(0,0), *imageLayers.at(imageIndex));
     painter.end();
     if (undoStack != NULL)
     {
-	AddCommand * command = new AddCommand(image, newImage, this);
+	AddCommand * command = new AddCommand(*imageLayers.at(imageIndex), newImage, this);
 	command->setText("Resize Image");
 	undoStack->push(command);
     }
-    image = newImage;
+    imageLayers.replace(imageIndex, new Layer(newImage));
     this->makeChange();
 }
 

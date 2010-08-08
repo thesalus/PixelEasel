@@ -42,9 +42,10 @@ signals:
 
 private:
     QString	    fileName;
-    Layer	    image;
+    int		    imageIndex;
+    QVector<Layer*> imageLayers;
     Layer	    scratchpad;
-    ImageCanvas*    canvas;
+    QVector<ImageView*>	views;
     QScrollArea*    scrollArea;
     QUndoStack*	    undoStack;
 
