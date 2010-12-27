@@ -1,7 +1,5 @@
 #include "PenTool.h"
 #include "ImageDocument.h"
-#include <iostream>
-using namespace std;
 
 PenTool::PenTool(ImageDocument* document, QPen pen)
     : document_m(document), scribbling(false), pen_m(pen)

@@ -84,7 +84,8 @@ void PixelEasel::saveAs()
 				    tr("Images (*.png *.gif)"));
     if (fileName.isEmpty() || activeDocument() == NULL)
 	return;
-    activeDocument()->save(fileName);
+    activeDocument()->setFileName(fileName);
+    activeDocument()->save();
     saveAct->setEnabled(!undoGroup->isClean());
 }
 
@@ -255,4 +256,21 @@ void PixelEasel::updateContext(QMdiSubWindow* window)
 void PixelEasel::updateSave(bool saveState)
 {
     saveAct->setEnabled(!saveState);
+}
+
+int PixelEasel::exit()
+{
+    int die = 1;
+    ImageDocument* doc;
+    while ((doc = activeDocument()) != NULL) {
+	if (QMessageBox::warning(this, tr("Unsaved Changes"),
+				       "You have unsaved changes, you will lose "
+				       "them if you exit now.",
+				       "Exit", "Cancel",
+				       0, 1, 1))
+	{
+	    die = 0;
+	}
+    }
+    return die;
 }

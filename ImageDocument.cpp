@@ -1,18 +1,20 @@
 #include "ImageDocument.h"
 #include "Commands.h"
-#include <iostream>
-using namespace std;
+
+int ImageDocument::untitled_counter = 0;
 
 ImageDocument::ImageDocument(QSize size)
-    :	fileName("Untitled"),
+    :	fileName("Untitled"+(untitled_counter > 0 ? " "+QString::number(untitled_counter+1) : "")),
 	imageIndex(0),
 	scratchpad(size, QImage::Format_ARGB32),
 	undoStack(NULL)
 {
+    // create a transparent background
     QImage image(size, QImage::Format_ARGB32);
-    image.fill(qRgba(255, 255, 255, 0));
-    imageLayers << (new Layer(image));
+	image.fill(qRgba(255, 255, 255, 0));
+	imageLayers << (new Layer(image));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
+    untitled_counter++;
     initialize();
 }
 
@@ -30,7 +32,7 @@ ImageDocument::ImageDocument(QString fileName_)
 	this->close();
     } else {
 	scratchpad = QImage(image.size(), QImage::Format_ARGB32);
-	scratchpad.fill(qRgba(255, 255, 255, 0));
+	    scratchpad.fill(qRgba(255, 255, 255, 0));
 	imageLayers << (new Layer(image));
 	initialize();
     }
@@ -73,14 +75,12 @@ void ImageDocument::resetScale()
     ((ImageCanvas*) views.first())->resetScale();
 }
 
-void ImageDocument::save(QString file)
+void ImageDocument::save()
 {
-    if (file.isEmpty())
-	file = fileName;
-    if (this->getImage()->save(file, "PNG")) {
+    // Expand this to include other file types
+    if (this->getImage()->save(fileName, "PNG")) {
 	if (undoStack != NULL && !undoStack->isClean())
 	    undoStack->setClean();
-	fileName = file;
     }
     makeChange();
 }
@@ -103,6 +103,7 @@ QString ImageDocument::getPath()
 
 QSize ImageDocument::getSize()
 {
+    // is this the best size to return?
     return scratchpad.size();
 }
 
@@ -129,15 +130,20 @@ void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
 {
     QImage old_image = imageLayers.at(imageIndex)->copy();
     QPainter painter(imageLayers.at(imageIndex));
-    painter.setPen(pen);
-    painter.drawLines(pointPairs);
-    painter.end();
+	painter.setPen(pen);
+	painter.drawLines(pointPairs);
+	painter.end();
     if (undoStack != NULL)
     {
 	AddCommand * command = new AddCommand(old_image, *imageLayers.at(imageIndex), this);
 	command->setText("Draw Line");
 	undoStack->push(command);
     }
+    refreshScratchpad();
+    this->makeChange();
+}
+
+void ImageDocument::refreshScratchpad() {
     scratchpad = Layer(imageLayers.at(imageIndex)->size(), QImage::Format_ARGB32);
     this->makeChange();
 }
@@ -145,9 +151,9 @@ void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
 void ImageDocument::scratchLine(QPen pen, QPoint startPoint, QPoint endPoint)
 {
     QPainter painter(&scratchpad);
-    painter.setPen(pen);
-    painter.drawLine(startPoint, endPoint);
-    painter.end();
+	painter.setPen(pen);
+	painter.drawLine(startPoint, endPoint);
+	painter.end();
     //    int rad = (pen.width() / 2) + 2;
     //    this->update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
 
@@ -181,6 +187,13 @@ void ImageDocument::setSize(QSize newSize)
     }
     imageLayers.replace(imageIndex, new Layer(newImage));
     this->makeChange();
+}
+
+void ImageDocument::setFileName(QString file)
+{
+    fileName = file;
+    makeChange();
+    // TODO: we're duplicating the makechange call here when saving as...
 }
 
 void ImageDocument::setUndoStack(QUndoStack* undoStack_)

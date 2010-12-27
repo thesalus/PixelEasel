@@ -1,5 +1,7 @@
 #include "ImageCanvas.h"
 #include "ImageDocument.h"
+#include "PenTool.h"
+#include "LineTool.h"
 #include <iostream>
 #include "SolidBackgroundLayer.h"
 using namespace std;
@@ -14,7 +16,7 @@ ImageCanvas::ImageCanvas(ImageDocument* document) :
     myPenWidth = 1;
     myPenColor = Qt::black;
     scaleFactor = 1.0;
-    currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
+    currentTool = new LineTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
 					 Qt::RoundCap, Qt::RoundJoin));
 }
 

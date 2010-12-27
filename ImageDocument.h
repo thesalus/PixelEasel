@@ -20,11 +20,16 @@ public:
 
     void scaleImage(double);
     void resetScale();
+// Permanent Actions
     void replaceImage(QImage new_image);
     void drawImage(QImage new_image);
     void drawLines(QPen pen, QVector<QPoint> pointPairs);
+// Temporary Actions
+    void refreshScratchpad();
     void scratchLine(QPen pen, QPoint startPoint, QPoint endPoint);
-    void save(QString file = NULL);
+
+    void save();
+    void setFileName(QString file);
 
     QImage *	    getImage();
     QString	    getPath();
@@ -41,6 +46,7 @@ signals:
     void imageModified(const QImage &);
 
 private:
+    static int	    untitled_counter;
     QString	    fileName;
     int		    imageIndex;
     QVector<Layer*> imageLayers;
@@ -50,6 +56,7 @@ private:
     QUndoStack*	    undoStack;
 
     void	    makeChange();
+		    // make change, and refresh image
     void	    initialize();
 };
 

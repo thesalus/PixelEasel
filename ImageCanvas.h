@@ -6,7 +6,6 @@
 #include <QColor>
 #include <QMouseEvent>
 #include "Tool.h"
-#include "PenTool.h"
 #include "Layer.h"
 #include "BackgroundLayer.h"
 #include "ImageView.h"

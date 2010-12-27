@@ -45,6 +45,7 @@ private:
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     void setupContext(ImageDocument*);
     ImageDocument *activeDocument();
+    int exit();
 
     QScrollArea *scrollArea;
     QMdiArea *mdiArea;
