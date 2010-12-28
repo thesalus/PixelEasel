@@ -8,14 +8,14 @@
 #include <QAction>
 
 #include <QScrollBar>
-#include <QFileDialog>
-#include <QDir>
 #include <QMdiArea>
 #include <QUndoGroup>
 #include <QUndoStack>
 #include <QDockWidget>
 #include <QUndoView>
 #include "ImageDocument.h"
+#include "ImageSwitcher.h"
+#include "HotkeyBar.h"
 
 class PixelEasel : public QMainWindow {
     Q_OBJECT
@@ -38,20 +38,25 @@ private slots:
     void updateContext(QMdiSubWindow*);
     void updateSave(bool);
 
+    void setTool(int);
+
 private:
     void createUndoView();
     void createActions();
+    void createHotkeys();
     void createMenus();
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     void setupContext(ImageDocument*);
     ImageDocument *activeDocument();
-    int exit();
+    void closeEvent(QCloseEvent* e);
 
     QScrollArea *scrollArea;
     QMdiArea *mdiArea;
     QDockWidget *dock;
     QUndoGroup *undoGroup;
     QUndoView *undoView;
+
+    HotkeyBar *hotkeys;
 
     QAction *newAct;
     QAction *openAct;

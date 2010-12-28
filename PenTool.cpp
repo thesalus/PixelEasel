@@ -8,7 +8,8 @@ PenTool::PenTool(ImageDocument* document, QPen pen)
 
 void PenTool::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton)
+    {
 	lastPoint = event->pos();
 	scribbling = true;
     }
@@ -16,7 +17,8 @@ void PenTool::mousePressEvent(QMouseEvent *event)
 
 void PenTool::mouseMoveEvent(QMouseEvent *event)
 {
-    if ((event->buttons() & Qt::LeftButton) && scribbling) {
+    if ((event->buttons() & Qt::LeftButton) && scribbling)
+    {
 	QPoint nextPoint = event->pos();
 	document_m->scratchLine(pen_m, lastPoint, nextPoint);
 	pointPairs.push_back(lastPoint);
@@ -27,7 +29,8 @@ void PenTool::mouseMoveEvent(QMouseEvent *event)
 
 void PenTool::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton && scribbling) {
+    if (event->button() == Qt::LeftButton && scribbling)
+    {
 	lastPoint = event->pos();
 	scribbling = false;
 	document_m->drawLines(pen_m, pointPairs);

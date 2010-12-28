@@ -1,5 +1,8 @@
 #include "PixelEasel.h"
 #include "ResizeDialog.h"
+#include <QFileDialog>
+#include <QDir>
+#include <QToolButton>
 #include <iostream>
 using namespace std;
 
@@ -10,6 +13,8 @@ PixelEasel::PixelEasel(QWidget *parent) :
 
     mdiArea = new QMdiArea;
     mdiArea->setBackgroundRole(QPalette::Dark);
+    mdiArea->setViewMode(QMdiArea::TabbedView);
+    // TODO: find a way to add an X to close tabs.
     setCentralWidget(mdiArea);
 
     dock = new QDockWidget(tr("Actions"), this);
@@ -17,11 +22,12 @@ PixelEasel::PixelEasel(QWidget *parent) :
     addDockWidget(Qt::RightDockWidgetArea, dock);
 
     createActions();
+    createHotkeys();
     createMenus();
     createUndoView();
 
     setWindowTitle(tr("Pixel Easel"));
-    resize(500, 400);
+    resize(700, 500);
 }
 
 PixelEasel::~PixelEasel()
@@ -34,7 +40,8 @@ void PixelEasel::newFile()
     ResizeDialog* rd = new ResizeDialog(QSize(64,64), this);
     rd->setModal(true);
     QSize size;
-    while (!size.isValid()) {
+    while (!size.isValid())
+    {
 	rd->exec();
 	rd->activateWindow();
 	size = rd->getSize();
@@ -49,32 +56,38 @@ void PixelEasel::newFile()
 
 void PixelEasel::open()
 {
-    QFileDialog* fd = new QFileDialog(this, tr("Open File"), QDir::currentPath(), tr("Images (*.png *.gif)"));
+    QFileDialog* fd = new QFileDialog(this, tr("Open File"),
+                                      QDir::currentPath(),
+                                      tr("Images (*.png *.gif)"));
     QString fileName = fd->getOpenFileName();
-    if (!fileName.isEmpty()) {
+    if (!fileName.isEmpty())
+    {
 	QList<QMdiSubWindow*> list = mdiArea->subWindowList();
 	ImageDocument* imageDocument = NULL;
 
-	// ensure uniqueness
-	for (int i = 0; i < list.size(); i++) {
-	    if (((ImageDocument*) list.at(i))->getPath() == fileName) {
-		imageDocument = (ImageDocument*) list.at(i);
-		break;
-	    }
-	}
-	if (imageDocument == NULL) {
-	    imageDocument = new ImageDocument(fileName);
-	    setupContext(imageDocument);
-	}
-	imageDocument->showMaximized();
-	updateActions();
+        // ensure uniqueness
+        for (int i = 0; i < list.size(); i++) {
+            if (((ImageDocument*) list.at(i))->getPath() == fileName) {
+                imageDocument = (ImageDocument*) list.at(i);
+                break;
+            }
+        }
+        if (imageDocument == NULL) {
+            imageDocument = new ImageDocument(fileName);
+            setupContext(imageDocument);
+        }
+        imageDocument->showMaximized();
+        updateActions();
     }
 }
-
+      
 void PixelEasel::save()
 {
-    activeDocument()->save();
-    saveAct->setEnabled(!undoGroup->isClean());
+    if (activeDocument()->hasFile())
+    {
+        activeDocument()->save();
+        saveAct->setEnabled(!undoGroup->isClean());
+    }
 }
 
 void PixelEasel::saveAs()
@@ -173,6 +186,15 @@ void PixelEasel::createActions()
      connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
  }
 
+void PixelEasel::createHotkeys()
+{
+    hotkeys = new HotkeyBar(this, 2);
+
+    hotkeys->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
+    addToolBar(Qt::BottomToolBarArea, hotkeys);
+    // TODO: should we only show this if there is an active document?
+}
+
 void PixelEasel::createMenus()
 {
      fileMenu = new QMenu(tr("&File"), this);
@@ -208,6 +230,7 @@ void PixelEasel::createMenus()
 void PixelEasel::createUndoView()
 {
     undoView = new QUndoView(undoGroup, dock);
+    // resize it somehow.
     undoView->setWindowTitle(tr("Command List"));
     undoView->show();
     undoView->setAttribute(Qt::WA_QuitOnClose, false);
@@ -255,22 +278,26 @@ void PixelEasel::updateContext(QMdiSubWindow* window)
 
 void PixelEasel::updateSave(bool saveState)
 {
-    saveAct->setEnabled(!saveState);
+    saveAct->setEnabled(!saveState && activeDocument()->hasFile());
 }
 
-int PixelEasel::exit()
+void PixelEasel::closeEvent(QCloseEvent* e)
 {
-    int die = 1;
-    ImageDocument* doc;
-    while ((doc = activeDocument()) != NULL) {
-	if (QMessageBox::warning(this, tr("Unsaved Changes"),
-				       "You have unsaved changes, you will lose "
-				       "them if you exit now.",
-				       "Exit", "Cancel",
-				       0, 1, 1))
-	{
-	    die = 0;
-	}
+    QList<QMdiSubWindow *> list = mdiArea->subWindowList(QMdiArea::StackingOrder);
+    QList<QMdiSubWindow *>::iterator i;
+    for (i = list.begin(); i != list.end(); ++i)
+    {
+        if(!(*i)->close())
+        {
+            e->ignore();
+            return;
+        }
     }
-    return die;
+    e->accept();
+}
+
+void PixelEasel::setTool(int type)
+{
+    if (activeDocument() != NULL)
+        activeDocument()->setToolInActiveView((Tool::ToolTypes) type);
 }

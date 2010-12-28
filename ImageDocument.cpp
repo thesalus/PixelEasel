@@ -1,10 +1,13 @@
 #include "ImageDocument.h"
 #include "Commands.h"
+#include <QFileDialog>
+#include <QDir>
 
 int ImageDocument::untitled_counter = 0;
 
 ImageDocument::ImageDocument(QSize size)
     :	fileName("Untitled"+(untitled_counter > 0 ? " "+QString::number(untitled_counter+1) : "")),
+        hasFileFlag(false),
 	imageIndex(0),
 	scratchpad(size, QImage::Format_ARGB32),
 	undoStack(NULL)
@@ -20,17 +23,21 @@ ImageDocument::ImageDocument(QSize size)
 
 ImageDocument::ImageDocument(QString fileName_)
     :	fileName(fileName_),
+        hasFileFlag(true),
 	imageIndex(0),
 	scratchpad(QSize(1,1), QImage::Format_ARGB32),
 	undoStack(NULL)
 {
     QImage image(fileName);
     this->setAttribute(Qt::WA_DeleteOnClose, true);
-    if (image.isNull()) {
+    if (image.isNull())
+    {
 	QMessageBox::information(this, tr("Image Canvas"),
 				 tr("Cannot load %1.").arg(fileName));
 	this->close();
-    } else {
+    }
+    else
+    {
 	scratchpad = QImage(image.size(), QImage::Format_ARGB32);
 	    scratchpad.fill(qRgba(255, 255, 255, 0));
 	imageLayers << (new Layer(image));
@@ -78,7 +85,9 @@ void ImageDocument::resetScale()
 void ImageDocument::save()
 {
     // Expand this to include other file types
-    if (this->getImage()->save(fileName, "PNG")) {
+    // TODO: do we need to make use of hasFileFlag
+    if (this->getImage()->save(fileName, "PNG"))
+    {
 	if (undoStack != NULL && !undoStack->isClean())
 	    undoStack->setClean();
     }
@@ -192,6 +201,7 @@ void ImageDocument::setSize(QSize newSize)
 void ImageDocument::setFileName(QString file)
 {
     fileName = file;
+    hasFileFlag = true;
     makeChange();
     // TODO: we're duplicating the makechange call here when saving as...
 }
@@ -201,4 +211,58 @@ void ImageDocument::setUndoStack(QUndoStack* undoStack_)
     undoStack = undoStack_;
     connect(undoStack,	    SIGNAL(cleanChanged(bool)),
 	    this,	    SLOT(updateTitle(bool)));
+}
+
+void ImageDocument::closeEvent(QCloseEvent* event)
+{
+    // figure out a way to make this more convenient for users.
+    if (!undoStack->isClean())
+    {
+        switch( QMessageBox::information( this, "Unsaved Changes in "+fileName.split("/").last(),
+                                              "The document has been changed since "
+                                              "the last save.",
+                                              "Save Now", "Cancel", "Discard Changes",
+                                              0, 1 ) )
+        {
+            case 0:
+                // if there is no filename, then query the user for one
+                if (!hasFileFlag)
+                {
+                    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
+                                                    QDir::currentPath(),
+                                                    tr("Images (*.png *.gif)"));
+                    if (fileName.isEmpty())
+                    {
+                        // TODO: or should we ask them again?
+                        event->ignore();
+                        break;
+                    }
+                    setFileName(fileName);
+                }
+                save();
+                event->accept();
+                break;
+            case 1:
+            default:
+                event->ignore();
+                break;
+            case 2:
+                event->accept();
+                break;
+        }
+    }
+    else
+    {
+        event->accept();
+    }
+}
+
+bool ImageDocument::hasFile()
+{
+    return hasFileFlag;
+}
+
+void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
+{
+    views.first()->setTool(type);
 }

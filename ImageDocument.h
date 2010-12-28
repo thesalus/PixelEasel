@@ -31,6 +31,8 @@ public:
     void save();
     void setFileName(QString file);
 
+    void closeEvent(QCloseEvent* event);
+
     QImage *	    getImage();
     QString	    getPath();
     QSize	    getSize();
@@ -38,6 +40,9 @@ public:
 
     void	    setSize(QSize newSize);
     void	    setUndoStack(QUndoStack* undoStack_);
+
+    bool            hasFile();
+    void            setToolInActiveView(Tool::ToolTypes);
 
 private slots:
     void updateTitle(bool);
@@ -48,6 +53,7 @@ signals:
 private:
     static int	    untitled_counter;
     QString	    fileName;
+    bool            hasFileFlag;
     int		    imageIndex;
     QVector<Layer*> imageLayers;
     Layer	    scratchpad;
