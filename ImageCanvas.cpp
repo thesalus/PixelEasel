@@ -16,8 +16,8 @@ ImageCanvas::ImageCanvas(ImageDocument* document) :
     myPenWidth = 1;
     myPenColor = Qt::black;
     scaleFactor = 1.0;
-    currentTool = new LineTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
-					 Qt::RoundCap, Qt::RoundJoin));
+    currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
+                                         Qt::RoundCap, Qt::RoundJoin));
 }
 
 /*
@@ -96,4 +96,19 @@ void ImageCanvas::mouseReleaseEvent(QMouseEvent *event)
 	    new QMouseEvent(event->type(), normalizePoint(event->pos()),event->button(),event->buttons(),event->modifiers());
     currentTool->mouseReleaseEvent(adjustedEvent);
     delete adjustedEvent;
+}
+
+void ImageCanvas::setTool(Tool::ToolTypes type)
+{
+    switch(type)
+    {
+    case Tool::PenTool :
+        currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
+                                             Qt::RoundCap, Qt::RoundJoin));
+        break;
+    case Tool::LineTool :
+        currentTool = new LineTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
+                                             Qt::RoundCap, Qt::RoundJoin));
+        break;
+    }
 }

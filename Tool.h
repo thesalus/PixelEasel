@@ -10,6 +10,7 @@ class Tool
 {
 public:
     Tool();
+    enum ToolTypes { LineTool, PenTool };
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QMouseEvent *event) = 0;

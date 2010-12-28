@@ -19,6 +19,7 @@ public:
     void resetScale();
     void setPenColor(const QColor &);
     void setPenWidth(int);
+    void setTool(Tool::ToolTypes type);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
