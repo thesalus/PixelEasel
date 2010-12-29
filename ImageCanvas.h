@@ -1,14 +1,15 @@
 #ifndef IMAGECANVAS_H
 #define IMAGECANVAS_H
 
-#include <QPainter>
-#include <QLabel>
 #include <QColor>
+#include <QLabel>
 #include <QMouseEvent>
-#include "Tool.h"
-#include "Layer.h"
+#include <QPainter>
+#include <QRubberBand>
 #include "BackgroundLayer.h"
 #include "ImageView.h"
+#include "Layer.h"
+#include "Tool.h"
 
 class ImageCanvas : public ImageView
 {
@@ -17,8 +18,11 @@ public:
     ImageCanvas(ImageDocument *document);
     void scaleImage(double factor);
     void resetScale();
+
     void setPenColor(const QColor &);
     void setPenWidth(int);
+    void setSelectBox(QRect rect);
+    void setSelectShow(bool show);
     void setTool(Tool::ToolTypes type);
 
 protected:
@@ -38,7 +42,8 @@ private:
 
     double	    scaleFactor;
 
-    Tool*	    currentTool;
+    Tool	  * currentTool;
+    QRubberBand   * rubberBand;
     int		    myPenWidth;
     QColor	    myPenColor;
 };

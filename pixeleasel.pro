@@ -11,7 +11,8 @@ SOURCES += main.cpp \
     SolidBackgroundLayer.cpp \
     ImageView.cpp \
     LineTool.cpp \
-    HotkeyBar.cpp
+    HotkeyBar.cpp \
+    SelectTool.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
@@ -25,11 +26,13 @@ HEADERS += PixelEasel.h \
     SolidBackgroundLayer.h \
     ImageView.h \
     LineTool.h \
-    HotkeyBar.h
+    HotkeyBar.h \
+    SelectTool.h
 HEADERS += ResizeDialog.h
 HEADERS += Commands.h
 HEADERS += ImageCanvas.h
 HEADERS += ImageDocument.h
 
 OTHER_FILES += \
-    images/pencil.png
+    images/pencil.png \
+    images/line.png

@@ -14,7 +14,6 @@
 #include <QDockWidget>
 #include <QUndoView>
 #include "ImageDocument.h"
-#include "ImageSwitcher.h"
 #include "HotkeyBar.h"
 
 class PixelEasel : public QMainWindow {

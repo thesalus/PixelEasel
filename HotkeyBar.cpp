@@ -38,6 +38,11 @@ void HotkeyBar::createButtons()
     buttons[1]->setIcon(QIcon("line.png"));
     buttons[1]->setText(QString("Line Tool"));
     mapper->setMapping(buttons[1], (int) Tool::LineTool);
+
+    buttons[2] = new QToolButton;
+    buttons[2]->setIcon(QIcon("select.png"));
+    buttons[2]->setText(QString("Selection"));
+    mapper->setMapping(buttons[2], (int) Tool::SelectTool);
 }
 
 void HotkeyBar::setTool(int newSelection)

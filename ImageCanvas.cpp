@@ -2,13 +2,15 @@
 #include "ImageDocument.h"
 #include "PenTool.h"
 #include "LineTool.h"
+#include "SelectTool.h"
 #include <iostream>
 #include "SolidBackgroundLayer.h"
 using namespace std;
 
 ImageCanvas::ImageCanvas(ImageDocument* document) :
     ImageView(document),
-    background(new SolidBackgroundLayer(document_m->getSize(), Qt::green))
+    background(new SolidBackgroundLayer(document_m->getSize(), Qt::green)),
+    rubberBand(0)
 {
     this->setBackgroundRole(QPalette::Base);
     this->setStyleSheet("QLabel { background-color: #999999 }");
@@ -18,6 +20,7 @@ ImageCanvas::ImageCanvas(ImageDocument* document) :
     scaleFactor = 1.0;
     currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
                                          Qt::RoundCap, Qt::RoundJoin));
+//    currentTool = new SelectTool(document_m);
 }
 
 /*
@@ -71,7 +74,8 @@ void ImageCanvas::refreshImage(const QImage& image)
 
 QPoint ImageCanvas::normalizePoint(QPoint point)
 {
-    return point/scaleFactor;
+    // I suspect this may be slightly slow.
+    return (point-QPoint(scaleFactor, scaleFactor)/2)/scaleFactor;
 }
 
 void ImageCanvas::mousePressEvent(QMouseEvent *event)
@@ -110,5 +114,30 @@ void ImageCanvas::setTool(Tool::ToolTypes type)
         currentTool = new LineTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
                                              Qt::RoundCap, Qt::RoundJoin));
         break;
+    case Tool::SelectTool :
+        currentTool = new SelectTool(this);
+        break;
+    }
+}
+
+void ImageCanvas::setSelectBox(QRect rect)
+{
+    if (!rubberBand)
+    {
+        rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+    }
+    rubberBand->setGeometry(rect);
+    rubberBand->show();
+}
+
+void ImageCanvas::setSelectShow(bool show)
+{
+    if (show)
+    {
+        rubberBand->show();
+    }
+    else
+    {
+        rubberBand->hide();
     }
 }

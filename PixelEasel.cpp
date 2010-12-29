@@ -188,7 +188,7 @@ void PixelEasel::createActions()
 
 void PixelEasel::createHotkeys()
 {
-    hotkeys = new HotkeyBar(this, 2);
+    hotkeys = new HotkeyBar(this, 3);
 
     hotkeys->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
     addToolBar(Qt::BottomToolBarArea, hotkeys);
