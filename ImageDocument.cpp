@@ -49,7 +49,9 @@ void ImageDocument::initialize()
 {
     ImageCanvas *canvas = new ImageCanvas(this);
     connect(this,	    SIGNAL(imageModified(const QImage&)),
-	    canvas,	    SLOT(refreshImage(const QImage&)));
+            canvas,	    SLOT(refreshImage(const QImage&)));
+    connect(canvas,	    SIGNAL(selectionModified()),
+            this,	    SLOT(passSelectionModified()));
     views << canvas;
 
     scrollArea = new QScrollArea;
@@ -215,13 +217,13 @@ void ImageDocument::setUndoStack(QUndoStack* undoStack_)
 
 void ImageDocument::closeEvent(QCloseEvent* event)
 {
-    // figure out a way to make this more convenient for users.
+    // figure out a way to make this more convenient for users when dealing with multiple files.
     if (!undoStack->isClean())
     {
         switch( QMessageBox::information( this, "Unsaved Changes in "+fileName.split("/").last(),
                                               "The document has been changed since "
                                               "the last save.",
-                                              "Save Now", "Cancel", "Discard Changes",
+                                              "&Save Now", "&Discard Changes", "&Cancel",
                                               0, 1 ) )
         {
             case 0:
@@ -233,8 +235,7 @@ void ImageDocument::closeEvent(QCloseEvent* event)
                                                     tr("Images (*.png *.gif)"));
                     if (fileName.isEmpty())
                     {
-                        // TODO: or should we ask them again?
-                        event->ignore();
+                        event->ignore();    // TODO: should we ask them again?
                         break;
                     }
                     setFileName(fileName);
@@ -243,11 +244,11 @@ void ImageDocument::closeEvent(QCloseEvent* event)
                 event->accept();
                 break;
             case 1:
-            default:
-                event->ignore();
+                event->accept();
                 break;
             case 2:
-                event->accept();
+            default:
+                event->ignore();
                 break;
         }
     }
@@ -264,5 +265,82 @@ bool ImageDocument::hasFile()
 
 void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
 {
+    if (type != Tool::SelectTool)
+    {
+        // what if we change the layers, do we discard the selection?
+        // TODO: for each of them
+        views.first()->showSelection(false);
+    }
     views.first()->setTool(type);
 }
+
+bool ImageDocument::hasSelection()
+{
+    // look in the _ACTIVE_ view
+    return views.first()->hasSelection();
+}
+
+void ImageDocument::clearRect(QRect rect)
+{
+    QPainter painter(imageLayers.at(imageIndex));
+        painter.setBackgroundMode(Qt::TransparentMode);
+        painter.setCompositionMode ( QPainter::CompositionMode_DestinationOut);
+        painter.eraseRect(rect);
+        painter.end();
+    this->makeChange();
+}
+
+void ImageDocument::cut(QClipboard *clipboard)
+{
+    if (views.first()->hasSelection())
+    {
+        QImage oldImage = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
+        QRect selection = views.first()->getSelection();
+        clipboard->setImage(imageLayers.at(imageIndex)->copy(selection));
+        views.first()->showSelection(false);
+        clearRect(selection);
+        if (undoStack != NULL)
+        {
+            AddCommand * command = new AddCommand(oldImage, *imageLayers.at(imageIndex), this);
+            command->setText("Cut");
+            undoStack->push(command);
+        }
+    }
+}
+
+void ImageDocument::copy(QClipboard *clipboard)
+{
+    if (views.first()->hasSelection())
+    {
+        QRect selection = views.first()->getSelection();
+        clipboard->setImage(imageLayers.at(imageIndex)->copy(selection));
+    }
+}
+
+void ImageDocument::paste(QClipboard *clipboard)
+{
+    if(clipboard->mimeData()->hasImage())
+    {
+        QImage oldImage = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
+        // TODO: we need to paste it into a temporary layer, which we can then drag around.
+        QPainter painter(&scratchpad);
+        painter.drawImage(QPoint(0,0), clipboard->image());
+        painter.end();
+        views.first()->setSelectBox(QRect(QPoint(0,0), clipboard->image().size()));
+        if (undoStack != NULL)
+        {
+            AddCommand * command = new AddCommand(oldImage, *imageLayers.at(imageIndex), this);
+            command->setText("Paste");
+            undoStack->push(command);
+        }
+    }
+}
+
+// drag a selection
+// clear the selection, paste the selection
+
+void ImageDocument::passSelectionModified()
+{
+    emit selectionModified(hasSelection());
+}
+// TODO: close if the primary view is closed?

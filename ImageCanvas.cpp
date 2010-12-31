@@ -3,9 +3,7 @@
 #include "PenTool.h"
 #include "LineTool.h"
 #include "SelectTool.h"
-#include <iostream>
 #include "SolidBackgroundLayer.h"
-using namespace std;
 
 ImageCanvas::ImageCanvas(ImageDocument* document) :
     ImageView(document),
@@ -126,18 +124,39 @@ void ImageCanvas::setSelectBox(QRect rect)
     {
         rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     }
-    rubberBand->setGeometry(rect);
+    mySelection = rect;
+    rubberBand->setGeometry(QRect(rect.topLeft()*scaleFactor, rect.size()*scaleFactor));
     rubberBand->show();
+    emit selectionModified();
 }
 
-void ImageCanvas::setSelectShow(bool show)
+void ImageCanvas::showSelection(bool show)
 {
-    if (show)
+    if (rubberBand)
     {
-        rubberBand->show();
+        if (show)
+        {
+            rubberBand->show();
+            mySelection = QRect();
+        }
+        else
+        {
+            rubberBand->hide();
+        }
     }
-    else
+    emit selectionModified();
+}
+
+bool ImageCanvas::hasSelection()
+{
+    return (rubberBand && !rubberBand->isHidden());
+}
+
+QRect ImageCanvas::getSelection()
+{
+    if (!hasSelection())
     {
-        rubberBand->hide();
+        return QRect();
     }
+    return mySelection;
 }

@@ -22,8 +22,11 @@ public:
     void setPenColor(const QColor &);
     void setPenWidth(int);
     void setSelectBox(QRect rect);
-    void setSelectShow(bool show);
     void setTool(Tool::ToolTypes type);
+
+    bool hasSelection();
+    void showSelection(bool show);
+    QRect getSelection();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -32,6 +35,9 @@ protected:
 
 public slots:
     void refreshImage(const QImage&);
+
+signals:
+    void selectionModified();
 
 private:
     void setScale(double factor);
@@ -44,8 +50,10 @@ private:
 
     Tool	  * currentTool;
     QRubberBand   * rubberBand;
+
     int		    myPenWidth;
     QColor	    myPenColor;
+    QRect           mySelection;
 };
 
 #endif // IMAGECANVAS_H

@@ -11,8 +11,12 @@ class ImageView : public QLabel
     Q_OBJECT
 public:
     ImageView(ImageDocument *document);
+    virtual void setSelectBox(QRect rect);
     virtual void setTool(Tool::ToolTypes) = 0;  // do we want this to be a pure virtual method?
 
+    virtual void showSelection(bool);
+    virtual bool hasSelection();
+    virtual QRect getSelection();
 signals:
 
 public slots:

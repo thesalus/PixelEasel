@@ -9,9 +9,11 @@
 
 #include <QScrollBar>
 #include <QMdiArea>
+#include <QClipboard>
 #include <QUndoGroup>
 #include <QUndoStack>
 #include <QDockWidget>
+#include <QToolBox>
 #include <QUndoView>
 #include "ImageDocument.h"
 #include "HotkeyBar.h"
@@ -27,6 +29,9 @@ private slots:
     void open();
     void save();
     void saveAs();
+    void copy();
+    void cut();
+    void paste();
     void zoomIn();
     void zoomOut();
     void normalSize();
@@ -34,6 +39,7 @@ private slots:
     void about();
 
     void updateActions();
+    void updateEditActions(bool);
     void updateContext(QMdiSubWindow*);
     void updateSave(bool);
 
@@ -44,16 +50,19 @@ private:
     void createActions();
     void createHotkeys();
     void createMenus();
+    void createToolBox();
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     void setupContext(ImageDocument*);
     ImageDocument *activeDocument();
     void closeEvent(QCloseEvent* e);
 
     QScrollArea *scrollArea;
-    QMdiArea *mdiArea;
+    QMdiArea    *mdiArea;
     QDockWidget *dock;
-    QUndoGroup *undoGroup;
-    QUndoView *undoView;
+    QToolBox    *toolBox;
+    QUndoGroup  *undoGroup;
+    QUndoView   *undoView;
+    QClipboard    * clipboard;
 
     HotkeyBar *hotkeys;
 
@@ -62,6 +71,10 @@ private:
     QAction *saveAct;
     QAction *saveAsAct;
     QAction *exitAct;
+
+    QAction *copyAct;
+    QAction *cutAct;
+    QAction *pasteAct;
 
     QAction *zoomInAct;
     QAction *zoomOutAct;

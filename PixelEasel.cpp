@@ -7,7 +7,8 @@
 using namespace std;
 
 PixelEasel::PixelEasel(QWidget *parent) :
-    QMainWindow(parent)
+    QMainWindow(parent),
+    clipboard(QApplication::clipboard())
 {
     undoGroup = new QUndoGroup;
 
@@ -18,13 +19,14 @@ PixelEasel::PixelEasel(QWidget *parent) :
     setCentralWidget(mdiArea);
 
     dock = new QDockWidget(tr("Actions"), this);
+    // do we want to put it in a dock now?
     dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, dock);
 
     createActions();
     createHotkeys();
     createMenus();
-    createUndoView();
+    createToolBox();
 
     setWindowTitle(tr("Pixel Easel"));
     resize(700, 500);
@@ -102,6 +104,37 @@ void PixelEasel::saveAs()
     saveAct->setEnabled(!undoGroup->isClean());
 }
 
+void PixelEasel::cut()
+{
+    ImageDocument *doc = activeDocument();
+    if (doc != 0)
+    {
+        doc->cut(clipboard);
+    }
+}
+
+void PixelEasel::copy()
+{
+    ImageDocument *doc = activeDocument();
+    if (doc != 0)
+    {
+        doc->copy(clipboard);
+    }
+}
+
+void PixelEasel::paste()
+{
+    ImageDocument *doc = activeDocument();
+    if (doc != 0)
+    {
+        // TODO: we need to grab clipboard events, or check whenever focus returns to this window.
+        // check if there is something in the clipboard
+        doc->paste(clipboard);
+        setTool((int)Tool::SelectTool);
+        hotkeys->setTool((int) Tool::SelectTool);
+    }
+}
+
 void PixelEasel::zoomIn()
 {
     activeDocument()->scaleImage(1.25);
@@ -136,7 +169,7 @@ ImageDocument* PixelEasel::activeDocument()
 void PixelEasel::about()
 {
     QMessageBox::about(this, tr("About Pixel Easel"),
-	    tr("<p>Foo bar!</p>"));
+            tr("<p>Just a cross-platform pixel art editor.</p>"));
 }
 
 void PixelEasel::createActions()
@@ -163,6 +196,16 @@ void PixelEasel::createActions()
      undoAct->setShortcuts(QKeySequence::Undo);
      redoAct = undoGroup->createRedoAction(this, tr("&Redo"));
      redoAct->setShortcuts(QKeySequence::Redo);
+
+     cutAct = new QAction(tr("Cu&t"), this);
+     cutAct->setShortcut(QKeySequence::Cut);
+     connect(cutAct, SIGNAL(triggered()), this, SLOT(cut()));
+     copyAct = new QAction(tr("&Copy"), this);
+     copyAct->setShortcut(QKeySequence::Copy);
+     connect(copyAct, SIGNAL(triggered()), this, SLOT(copy()));
+     pasteAct = new QAction(tr("&Paste"), this);
+     pasteAct->setShortcut(QKeySequence::Paste);
+     connect(pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
 
      zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
      zoomInAct->setShortcut(QKeySequence::ZoomIn);
@@ -209,6 +252,10 @@ void PixelEasel::createMenus()
      editMenu = new QMenu(tr("&Edit"), this);
      editMenu->addAction(undoAct);
      editMenu->addAction(redoAct);
+     editMenu->addSeparator();
+     editMenu->addAction(cutAct);
+     editMenu->addAction(copyAct);
+     editMenu->addAction(pasteAct);
      menuBar()->addMenu(editMenu);
 
      viewMenu = new QMenu(tr("&View"), this);
@@ -227,14 +274,21 @@ void PixelEasel::createMenus()
      menuBar()->addMenu(helpMenu);
 }
 
+void PixelEasel::createToolBox()
+{
+    toolBox = new QToolBox(dock);
+    dock->setWidget(toolBox);
+    createUndoView();
+    toolBox->addItem(undoView, "History");
+}
+
 void PixelEasel::createUndoView()
 {
-    undoView = new QUndoView(undoGroup, dock);
+    undoView = new QUndoView(undoGroup, toolBox);
     // resize it somehow.
     undoView->setWindowTitle(tr("Command List"));
     undoView->show();
     undoView->setAttribute(Qt::WA_QuitOnClose, false);
-    dock->setWidget(undoView);
 }
 
 void PixelEasel::updateActions()
@@ -245,6 +299,24 @@ void PixelEasel::updateActions()
     resizeAct->setEnabled(hasDocument);
     normalSizeAct->setEnabled(hasDocument); // check zoom levels
     saveAsAct->setEnabled(hasDocument);
+
+    updateEditActions(this->activeDocument()->hasSelection());
+}
+
+void PixelEasel::updateEditActions(bool hasSelection)
+{
+    bool hasDocument = (this->activeDocument() != 0);
+    bool hasClipboard = false;
+    if (hasDocument)
+    {
+        hasClipboard = true;    //TODO: if something is in the clipboard
+    }
+    else
+    {
+        hasSelection = false;
+    }
+    cutAct->setEnabled(hasSelection);
+    copyAct->setEnabled(hasSelection);
 }
 
 void PixelEasel::adjustScrollBar(QScrollBar *scrollBar, double factor)
@@ -262,6 +334,8 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
     mdiArea->addSubWindow(imageDocument);
     connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
 	    this,	    SLOT(updateActions()));
+    connect(imageDocument,  SIGNAL(selectionModified(bool)),
+            this,	    SLOT(updateEditActions(bool)));
     connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
 	    this,	    SLOT(updateContext(QMdiSubWindow*)));
     connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),

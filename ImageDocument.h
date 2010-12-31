@@ -4,6 +4,7 @@
 #include <QMdiSubWindow>
 #include <QImage>
 #include <QScrollArea>
+#include <QClipboard>
 #include <QMessageBox>
 #include "ImageCanvas.h"
 #include <QUndoStack>
@@ -42,13 +43,20 @@ public:
     void	    setUndoStack(QUndoStack* undoStack_);
 
     bool            hasFile();
+    bool            hasSelection();
     void            setToolInActiveView(Tool::ToolTypes);
+
+    void            cut(QClipboard *clipboard);  // should we return something upon a successful action?
+    void            copy(QClipboard *clipboard);
+    void            paste(QClipboard *clipboard);
 
 private slots:
     void updateTitle(bool);
+    void passSelectionModified();
 
 signals:
     void imageModified(const QImage &);
+    bool selectionModified(bool);
 
 private:
     static int	    untitled_counter;
@@ -61,6 +69,7 @@ private:
     QScrollArea*    scrollArea;
     QUndoStack*	    undoStack;
 
+    void            clearRect(QRect rect);
     void	    makeChange();
 		    // make change, and refresh image
     void	    initialize();
