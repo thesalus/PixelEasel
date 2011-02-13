@@ -8,9 +8,11 @@ int ImageDocument::untitled_counter = 0;
 ImageDocument::ImageDocument(QSize size)
     :	fileName("Untitled"+(untitled_counter > 0 ? " "+QString::number(untitled_counter+1) : "")),
         hasFileFlag(false),
+        selectionChanged(false),
+        emptyScratchpadSelection(true),
 	imageIndex(0),
 	scratchpad(size, QImage::Format_ARGB32),
-	undoStack(NULL)
+        undoStack(NULL)
 {
     // create a transparent background
     QImage image(size, QImage::Format_ARGB32);
@@ -24,6 +26,8 @@ ImageDocument::ImageDocument(QSize size)
 ImageDocument::ImageDocument(QString fileName_)
     :	fileName(fileName_),
         hasFileFlag(true),
+        selectionChanged(false),
+        emptyScratchpadSelection(true),
 	imageIndex(0),
 	scratchpad(QSize(1,1), QImage::Format_ARGB32),
 	undoStack(NULL)
@@ -45,6 +49,8 @@ ImageDocument::ImageDocument(QString fileName_)
     }
 }
 
+// create from clipboard?
+
 void ImageDocument::initialize()
 {
     ImageCanvas *canvas = new ImageCanvas(this);
@@ -53,6 +59,8 @@ void ImageDocument::initialize()
     connect(canvas,	    SIGNAL(selectionModified()),
             this,	    SLOT(passSelectionModified()));
     views << canvas;
+
+    scratchpadTranslation = QPoint(0,0);
 
     scrollArea = new QScrollArea;
     scrollArea->setBackgroundRole(QPalette::Base);
@@ -103,7 +111,12 @@ QImage* ImageDocument::getImage()
     for (int i = 0; i < imageLayers.size(); ++i) {
 	image = imageLayers.at(i)->layOver(image);
     }
-    QImage *new_image = new QImage(scratchpad.layOver(image));
+    Layer temp(scratchpad.size(), QImage::Format_ARGB32);
+    QPainter painter(&temp);
+        painter.drawImage(scratchpadTranslation, scratchpad);
+        painter.end();
+
+    QImage *new_image = new QImage(temp.layOver(image));
     return new_image;
 }
 
@@ -184,6 +197,14 @@ void ImageDocument::updateTitle(bool state)
     this->setWindowTitle(title);
 }
 
+void ImageDocument::setFileName(QString file)
+{
+    fileName = file;
+    hasFileFlag = true;
+    makeChange();
+    // TODO: we're duplicating the makechange call here when saving as...
+}
+
 void ImageDocument::setSize(QSize newSize)
 {
     Layer newImage(newSize, QImage::Format_RGB32);
@@ -198,14 +219,6 @@ void ImageDocument::setSize(QSize newSize)
     }
     imageLayers.replace(imageIndex, new Layer(newImage));
     this->makeChange();
-}
-
-void ImageDocument::setFileName(QString file)
-{
-    fileName = file;
-    hasFileFlag = true;
-    makeChange();
-    // TODO: we're duplicating the makechange call here when saving as...
 }
 
 void ImageDocument::setUndoStack(QUndoStack* undoStack_)
@@ -284,7 +297,7 @@ void ImageDocument::clearRect(QRect rect)
 {
     QPainter painter(imageLayers.at(imageIndex));
         painter.setBackgroundMode(Qt::TransparentMode);
-        painter.setCompositionMode ( QPainter::CompositionMode_DestinationOut);
+        painter.setCompositionMode(QPainter::CompositionMode_DestinationOut);
         painter.eraseRect(rect);
         painter.end();
     this->makeChange();
@@ -292,6 +305,7 @@ void ImageDocument::clearRect(QRect rect)
 
 void ImageDocument::cut(QClipboard *clipboard)
 {
+    // TODO BUG: we need to merge the scratchpad first
     if (views.first()->hasSelection())
     {
         QImage oldImage = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
@@ -321,26 +335,73 @@ void ImageDocument::paste(QClipboard *clipboard)
 {
     if(clipboard->mimeData()->hasImage())
     {
-        QImage oldImage = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
-        // TODO: we need to paste it into a temporary layer, which we can then drag around.
+        preScratch = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
         QPainter painter(&scratchpad);
-        painter.drawImage(QPoint(0,0), clipboard->image());
-        painter.end();
-        views.first()->setSelectBox(QRect(QPoint(0,0), clipboard->image().size()));
-        if (undoStack != NULL)
-        {
-            AddCommand * command = new AddCommand(oldImage, *imageLayers.at(imageIndex), this);
-            command->setText("Paste");
-            undoStack->push(command);
-        }
+            painter.drawImage(QPoint(0,0), clipboard->image());
+            painter.end();
+        setSelection(QRect(QPoint(0,0), clipboard->image().size()));
+        emptyScratchpadSelection = false;
+        // the pasting action gets recorded when they actually release the selection
     }
 }
 
-// drag a selection
-// clear the selection, paste the selection
+void ImageDocument::setSelection(QRect rect)
+{
+    views.first()->setSelectBox(rect);
+    selectionChanged = true;
+    emit makeChange();
+}
 
 void ImageDocument::passSelectionModified()
 {
+    // merge the selected image back onto the original if it was changed
+    if (selectionChanged)
+    {
+        QPainter painter(imageLayers.at(imageIndex));
+            painter.drawImage(QPoint(0,0), scratchpad);
+            painter.end();
+        refreshScratchpad();
+        if (undoStack != NULL)
+        {
+            AddCommand * command = new AddCommand(preScratch, *imageLayers.at(imageIndex), this);
+            command->setText("Merge Selection");
+            undoStack->push(command);
+        }
+        // don't put this on the stack if we cancel
+        selectionChanged = false;
+        emptyScratchpadSelection = true;
+        scratchpadTranslation = QPoint(0,0);
+    }
     emit selectionModified(hasSelection());
 }
+
 // TODO: close if the primary view is closed?
+
+void ImageDocument::selectToScratchpad()
+{
+    // is it a bad idea to clip it out of the image? Yes.
+    QRect rect = views.first()->getSelection();
+    preScratch = imageLayers.at(imageIndex)->copy();
+    QImage moved = imageLayers.at(imageIndex)->copy(rect);
+    clearRect(rect);
+    QPainter painter(&scratchpad);
+        painter.setBackgroundMode(Qt::TransparentMode);
+        painter.setCompositionMode(QPainter::CompositionMode_DestinationOut);
+        painter.eraseRect(scratchpad.rect());
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.drawImage(rect.topLeft(), moved);
+        painter.end();
+    emptyScratchpadSelection = false;
+    selectionChanged = true;
+    emit makeChange();
+}
+
+void ImageDocument::translateSelection(QPoint point)
+{
+    if (emptyScratchpadSelection)
+    {
+        selectToScratchpad();
+    }
+    scratchpadTranslation += point;
+    emit makeChange();
+}

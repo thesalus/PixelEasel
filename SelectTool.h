@@ -2,6 +2,7 @@
 #define SELECTTOOL_H
 
 #include "Tool.h"
+#include <QCursor>
 #include <QMouseEvent>
 class ImageCanvas;
 
@@ -15,8 +16,13 @@ public:
 
 private:
     ImageCanvas   * canvas;
+    bool            dragging;
     bool            selecting;
+    QCursor         oldCursor;
     QPoint	    origin;
+    QPoint          midPoint;
+
+    QPoint          boundPoint(QPoint);
 };
 
 #endif // SELECTTOOL_H

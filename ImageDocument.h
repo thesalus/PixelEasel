@@ -39,12 +39,15 @@ public:
     QSize	    getSize();
     QUndoStack *    getUndoStack();
 
+    void            setSelection(QRect rect);
     void	    setSize(QSize newSize);
     void	    setUndoStack(QUndoStack* undoStack_);
 
     bool            hasFile();
     bool            hasSelection();
     void            setToolInActiveView(Tool::ToolTypes);
+    void            translateSelection(QPoint point);
+    void            selectToScratchpad();
 
     void            cut(QClipboard *clipboard);  // should we return something upon a successful action?
     void            copy(QClipboard *clipboard);
@@ -62,12 +65,16 @@ private:
     static int	    untitled_counter;
     QString	    fileName;
     bool            hasFileFlag;
+    bool            selectionChanged;
+    bool            emptyScratchpadSelection;
     int		    imageIndex;
     QVector<Layer*> imageLayers;
     Layer	    scratchpad;
     QVector<ImageView*>	views;
     QScrollArea*    scrollArea;
     QUndoStack*	    undoStack;
+    QImage          preScratch;
+    QPoint          scratchpadTranslation;
 
     void            clearRect(QRect rect);
     void	    makeChange();

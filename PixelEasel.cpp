@@ -135,6 +135,17 @@ void PixelEasel::paste()
     }
 }
 
+void PixelEasel::selectAll()
+{
+    ImageDocument *doc = activeDocument();
+    if (doc != 0)
+    {
+        doc->setSelection(QRect(QPoint(0,0),doc->getSize()));
+        setTool((int)Tool::SelectTool);
+        hotkeys->setTool((int) Tool::SelectTool);
+    }
+}
+
 void PixelEasel::zoomIn()
 {
     activeDocument()->scaleImage(1.25);
@@ -207,6 +218,10 @@ void PixelEasel::createActions()
      pasteAct->setShortcut(QKeySequence::Paste);
      connect(pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
 
+     selectAllAct = new QAction(tr("&Select All"), this);
+     selectAllAct->setShortcut(QKeySequence::SelectAll);
+     connect(selectAllAct, SIGNAL(triggered()), this, SLOT(selectAll()));
+
      zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
      zoomInAct->setShortcut(QKeySequence::ZoomIn);
      zoomInAct->setEnabled(false);
@@ -256,6 +271,8 @@ void PixelEasel::createMenus()
      editMenu->addAction(cutAct);
      editMenu->addAction(copyAct);
      editMenu->addAction(pasteAct);
+     editMenu->addSeparator();
+     editMenu->addAction(selectAllAct);
      menuBar()->addMenu(editMenu);
 
      viewMenu = new QMenu(tr("&View"), this);

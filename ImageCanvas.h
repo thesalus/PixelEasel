@@ -27,6 +27,7 @@ public:
     bool hasSelection();
     void showSelection(bool show);
     QRect getSelection();
+    void translateSelection(QPoint);
 
 protected:
     void mousePressEvent(QMouseEvent *event);

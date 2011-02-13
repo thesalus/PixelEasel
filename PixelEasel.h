@@ -32,6 +32,7 @@ private slots:
     void copy();
     void cut();
     void paste();
+    void selectAll();
     void zoomIn();
     void zoomOut();
     void normalSize();
@@ -62,7 +63,7 @@ private:
     QToolBox    *toolBox;
     QUndoGroup  *undoGroup;
     QUndoView   *undoView;
-    QClipboard    * clipboard;
+    QClipboard  *clipboard;
 
     HotkeyBar *hotkeys;
 
@@ -75,6 +76,8 @@ private:
     QAction *copyAct;
     QAction *cutAct;
     QAction *pasteAct;
+
+    QAction *selectAllAct;
 
     QAction *zoomInAct;
     QAction *zoomOutAct;

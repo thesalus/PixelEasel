@@ -45,6 +45,7 @@ void ImageCanvas::scaleImage(double factor)
 {
      Q_ASSERT(this->pixmap());
      this->setScale(scaleFactor*factor);
+     // we need to scale the rubberBand
 }
 
 /*
@@ -154,9 +155,12 @@ bool ImageCanvas::hasSelection()
 
 QRect ImageCanvas::getSelection()
 {
-    if (!hasSelection())
-    {
-        return QRect();
-    }
-    return mySelection;
+    return rubberBand->geometry();
+}
+
+void ImageCanvas::translateSelection(QPoint point)
+{
+    document_m->translateSelection(point);
+    rubberBand->setGeometry(rubberBand->geometry().translated(point));
+    // don't emit selectionModified
 }
