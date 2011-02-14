@@ -1,4 +1,5 @@
 #include "PixelEasel.h"
+#include "ImagePreview.h"
 #include "ResizeDialog.h"
 #include <QFileDialog>
 #include <QDir>
@@ -18,15 +19,10 @@ PixelEasel::PixelEasel(QWidget *parent) :
     // TODO: find a way to add an X to close tabs.
     setCentralWidget(mdiArea);
 
-    dock = new QDockWidget(tr("Actions"), this);
-    // do we want to put it in a dock now?
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, dock);
-
     createActions();
     createHotkeys();
     createMenus();
-    createToolBox();
+    createDocks();
 
     setWindowTitle(tr("Pixel Easel"));
     resize(700, 500);
@@ -291,17 +287,24 @@ void PixelEasel::createMenus()
      menuBar()->addMenu(helpMenu);
 }
 
-void PixelEasel::createToolBox()
+void PixelEasel::createDocks()
 {
-    toolBox = new QToolBox(dock);
-    dock->setWidget(toolBox);
+    previewDock = new QDockWidget(tr("Preview"), this);
+    previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, previewDock);
+    previews = new QStackedWidget();
+    previewDock->setWidget(previews);
+
+    historyDock = new QDockWidget(tr("History"), this);
+    historyDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, historyDock);
     createUndoView();
-    toolBox->addItem(undoView, "History");
+    historyDock->setWidget(undoView);
 }
 
 void PixelEasel::createUndoView()
 {
-    undoView = new QUndoView(undoGroup, toolBox);
+    undoView = new QUndoView(undoGroup, historyDock);
     // resize it somehow.
     undoView->setWindowTitle(tr("Command List"));
     undoView->show();
@@ -359,12 +362,18 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
 	    this,	    SLOT(updateContext(QMdiSubWindow*)));
     connect(undoGroup,	    SIGNAL(cleanChanged(bool)),
 	    this,	    SLOT(updateSave(bool)));
+    previews->insertWidget(0, imageDocument->getPreview());
+    // TODO: somehow get it to remove the widget when it gets destroyed
 }
 
 void PixelEasel::updateContext(QMdiSubWindow* window)
 {
-    if (window != 0)
-	undoGroup->setActiveStack(((ImageDocument*) window)->getUndoStack());
+    if (window != 0) {
+        undoGroup->setActiveStack(((ImageDocument*) window)->getUndoStack());
+        ImagePreview* preview = ((ImageDocument*) window)->getPreview();
+        preview->resize(QSize(50,50));
+        previews->setCurrentWidget(preview);
+    }
 }
 
 void PixelEasel::updateSave(bool saveState)

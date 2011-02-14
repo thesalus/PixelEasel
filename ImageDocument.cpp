@@ -68,6 +68,10 @@ void ImageDocument::initialize()
     scrollArea->setStyleSheet("QLabel { background-color: #999999 }");
     scrollArea->setWidget(canvas);
 
+    preview = new ImagePreview(this);
+    connect(this,	    SIGNAL(imageModified(const QImage&)),
+            preview,	    SLOT(refreshImage(const QImage&)));
+
     this->setWidget(scrollArea);
     this->setWindowTitle(fileName.split("/").last());
     this->resize(128, 128);
@@ -123,6 +127,11 @@ QImage* ImageDocument::getImage()
 QString ImageDocument::getPath()
 {
     return fileName;
+}
+
+ImagePreview* ImageDocument::getPreview()
+{
+    return preview;
 }
 
 QSize ImageDocument::getSize()
@@ -358,7 +367,7 @@ void ImageDocument::passSelectionModified()
     if (selectionChanged)
     {
         QPainter painter(imageLayers.at(imageIndex));
-            painter.drawImage(QPoint(0,0), scratchpad);
+            painter.drawImage(scratchpadTranslation, scratchpad);
             painter.end();
         refreshScratchpad();
         if (undoStack != NULL)
@@ -367,7 +376,7 @@ void ImageDocument::passSelectionModified()
             command->setText("Merge Selection");
             undoStack->push(command);
         }
-        // don't put this on the stack if we cancel
+        // TODO: don't put this on the stack if we cancel
         selectionChanged = false;
         emptyScratchpadSelection = true;
         scratchpadTranslation = QPoint(0,0);

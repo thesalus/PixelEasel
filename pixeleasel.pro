@@ -12,7 +12,8 @@ SOURCES += main.cpp \
     ImageView.cpp \
     LineTool.cpp \
     HotkeyBar.cpp \
-    SelectTool.cpp
+    SelectTool.cpp \
+    ImagePreview.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
@@ -27,7 +28,8 @@ HEADERS += PixelEasel.h \
     ImageView.h \
     LineTool.h \
     HotkeyBar.h \
-    SelectTool.h
+    SelectTool.h \
+    ImagePreview.h
 HEADERS += ResizeDialog.h
 HEADERS += Commands.h
 HEADERS += ImageCanvas.h

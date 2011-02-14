@@ -7,6 +7,7 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include "ImageCanvas.h"
+#include "ImagePreview.h"
 #include <QUndoStack>
 #include "Layer.h"
 class ImageCanvas;
@@ -38,6 +39,7 @@ public:
     QString	    getPath();
     QSize	    getSize();
     QUndoStack *    getUndoStack();
+    ImagePreview*   getPreview();
 
     void            setSelection(QRect rect);
     void	    setSize(QSize newSize);
@@ -75,6 +77,7 @@ private:
     QUndoStack*	    undoStack;
     QImage          preScratch;
     QPoint          scratchpadTranslation;
+    ImagePreview*   preview;
 
     void            clearRect(QRect rect);
     void	    makeChange();

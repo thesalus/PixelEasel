@@ -1,5 +1,6 @@
 #include "SelectTool.h"
 #include "ImageDocument.h"
+#include <QMessageBox>
 
 SelectTool::SelectTool(ImageCanvas* canvas_)
     : canvas(canvas_), dragging(false), selecting(false)
@@ -23,6 +24,12 @@ void SelectTool::mousePressEvent(QMouseEvent *event)
             canvas->setSelectBox(QRect(origin, QSize(1, 1)));
             selecting = true;
         }
+    }
+    else if (event->button() == Qt::RightButton && !dragging)
+    {
+        // TODO: we get a merge selection action... we don't want that
+        canvas->translateSelection(origin - midPoint);
+        canvas->showSelection(false);
     }
 }
 

@@ -16,6 +16,7 @@ class ImageCanvas : public ImageView
     Q_OBJECT
 public:
     ImageCanvas(ImageDocument *document);
+    ~ImageCanvas();
     void scaleImage(double factor);
     void resetScale();
 

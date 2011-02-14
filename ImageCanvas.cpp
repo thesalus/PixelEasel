@@ -21,6 +21,13 @@ ImageCanvas::ImageCanvas(ImageDocument* document) :
 //    currentTool = new SelectTool(document_m);
 }
 
+ImageCanvas::~ImageCanvas()
+{
+    delete background;
+    delete currentTool;
+    delete rubberBand;
+}
+
 /*
  * View Properties
  */
@@ -103,6 +110,9 @@ void ImageCanvas::mouseReleaseEvent(QMouseEvent *event)
 
 void ImageCanvas::setTool(Tool::ToolTypes type)
 {
+    if (currentTool) {
+        delete currentTool;
+    }
     switch(type)
     {
     case Tool::PenTool :

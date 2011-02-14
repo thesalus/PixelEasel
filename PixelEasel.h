@@ -7,6 +7,7 @@
 #include <QMenu>
 #include <QAction>
 
+#include <QStackedWidget>
 #include <QScrollBar>
 #include <QMdiArea>
 #include <QClipboard>
@@ -17,6 +18,7 @@
 #include <QUndoView>
 #include "ImageDocument.h"
 #include "HotkeyBar.h"
+#include <QDockWidget>
 
 class PixelEasel : public QMainWindow {
     Q_OBJECT
@@ -51,21 +53,24 @@ private:
     void createActions();
     void createHotkeys();
     void createMenus();
-    void createToolBox();
+    void createDocks();
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
     void setupContext(ImageDocument*);
     ImageDocument *activeDocument();
     void closeEvent(QCloseEvent* e);
 
-    QScrollArea *scrollArea;
-    QMdiArea    *mdiArea;
-    QDockWidget *dock;
-    QToolBox    *toolBox;
-    QUndoGroup  *undoGroup;
-    QUndoView   *undoView;
-    QClipboard  *clipboard;
+    QScrollArea     *scrollArea;
+    QMdiArea        *mdiArea;
+    QUndoView       *undoView;
+    QClipboard      *clipboard;
 
-    HotkeyBar *hotkeys;
+    QDockWidget     *dock;
+    QDockWidget     *previewDock;
+    QStackedWidget  *previews;
+    QDockWidget     *historyDock;
+    QUndoGroup      *undoGroup;
+
+    HotkeyBar       *hotkeys;
 
     QAction *newAct;
     QAction *openAct;
