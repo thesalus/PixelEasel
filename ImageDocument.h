@@ -9,7 +9,9 @@
 #include "ImageCanvas.h"
 #include "ImagePreview.h"
 #include <QUndoStack>
-#include "Layer.h"
+#include "Layers/Layer.h"
+#include "Palette.h"
+#include "PaletteColour.h"
 class ImageCanvas;
 
 class ImageDocument : public QMdiSubWindow
@@ -25,10 +27,10 @@ public:
 // Permanent Actions
     void replaceImage(QImage new_image);
     void drawImage(QImage new_image);
-    void drawLines(QPen pen, QVector<QPoint> point_pairs);
+    void drawLines(QVector<QPoint> point_pairs);
 // Temporary Actions
     void refreshScratchpad();
-    void scratchLine(QPen pen, QPoint start_point, QPoint end_point);
+    void scratchLine(QPoint start_point, QPoint end_point);
 
     void save();
     void setFileName(QString file);
@@ -36,6 +38,7 @@ public:
     void closeEvent(QCloseEvent* event);
 
     QImage*	    getImage();
+    Palette*        getPalette();
     QString	    getPath();
     QSize	    getSize();
     QUndoStack*     getUndoStack();
@@ -48,6 +51,7 @@ public:
     bool            hasFile();
     bool            hasSelection();
     void            setToolInActiveView(Tool::ToolTypes);
+    void            setColour(PaletteColour*);
     void            translateSelection(QPoint point);
     void            selectToScratchpad();
 
@@ -78,6 +82,11 @@ private:
     QImage          preScratch;
     QPoint          scratchpad_translation;
     ImagePreview*   preview;
+    Palette*        palette;
+
+    QPen            myPen;
+    int		    myPenWidth;
+    QColor	    myPenColor;
 
     void            clearRect(QRect rect);
     void	    makeChange();

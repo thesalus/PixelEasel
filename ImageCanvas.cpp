@@ -12,12 +12,8 @@ ImageCanvas::ImageCanvas(ImageDocument* document) :
 {
     this->setBackgroundRole(QPalette::Base);
 
-    myPenWidth = 1;
-    myPenColor = Qt::black;
     scaleFactor = 1.0;
-    currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
-                                         Qt::RoundCap, Qt::RoundJoin));
-//    currentTool = new SelectTool(document_m);
+    currentTool = new PenTool(document_m);
 }
 
 ImageCanvas::~ImageCanvas()
@@ -52,19 +48,6 @@ void ImageCanvas::scaleImage(double factor)
      Q_ASSERT(this->pixmap());
      this->setScale(scaleFactor*factor);
      // we need to scale the rubberBand
-}
-
-/*
- * Edit Properties
- */
-void ImageCanvas::setPenColor(const QColor &new_color)
-{
-    myPenColor = new_color;
-}
-
-void ImageCanvas::setPenWidth(int new_width)
-{
-    myPenWidth = new_width;
 }
 
 void ImageCanvas::refreshImage(const QImage& image)
@@ -122,12 +105,10 @@ void ImageCanvas::setTool(Tool::ToolTypes type)
     switch(type)
     {
     case Tool::PenTool :
-        currentTool = new PenTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
-                                             Qt::RoundCap, Qt::RoundJoin));
+        currentTool = new PenTool(document_m);
         break;
     case Tool::LineTool :
-        currentTool = new LineTool(document_m, QPen(myPenColor, myPenWidth, Qt::SolidLine,
-                                             Qt::RoundCap, Qt::RoundJoin));
+        currentTool = new LineTool(document_m);
         break;
     case Tool::SelectTool :
         currentTool = new SelectTool(this);

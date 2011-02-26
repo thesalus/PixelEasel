@@ -2,6 +2,7 @@
 #include "Commands.h"
 #include <QFileDialog>
 #include <QDir>
+#include <QHash>
 
 int ImageDocument::untitled_counter = 0;
 
@@ -12,7 +13,8 @@ ImageDocument::ImageDocument(QSize size)
         emptyScratchpadSelection(true),
         image_index(0),
 	scratchpad(size, QImage::Format_ARGB32),
-        undo_stack(NULL)
+        undo_stack(NULL),
+        palette(new Palette)
 {
     // create a transparent background
     QImage image(size, QImage::Format_ARGB32);
@@ -30,7 +32,8 @@ ImageDocument::ImageDocument(QString new_file_name)
         emptyScratchpadSelection(true),
         image_index(0),
 	scratchpad(QSize(1,1), QImage::Format_ARGB32),
-        undo_stack(NULL)
+        undo_stack(NULL),
+        palette(new Palette)
 {
     QImage image(file_name);
     this->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -67,6 +70,31 @@ void ImageDocument::initialize()
     scroll_area->setAlignment(Qt::AlignCenter);
     scroll_area->setStyleSheet("QLabel { background-color: #999999 }");
     scroll_area->setWidget(canvas);
+
+    myPenWidth = 1;
+    myPenColor = Qt::black;
+    myPen = QPen(myPenColor, myPenWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+
+    // grab all the colours from each layer and put it in the palette
+    // TODO: make the list unique
+    QVector<QRgb>   colours;
+    QHash<QRgb, int>     colour_hash;
+    for (int i = 0; i < image_layers.size(); ++i) {
+        Layer *image = image_layers.at(i);
+        for (int x = 0; x < image->width(); x++) {
+            for (int y = 0; y < image->height(); y++) {
+                QRgb key = image->pixel(x,y);
+                if (colour_hash.value(key, 0) == 0) {
+                    colours.push_back(key);
+                    colour_hash[key] = 1;
+                    palette->addColour(key);
+                }
+            }
+        }
+    }
+    for (int i = 0; i < image_layers.size(); ++i) {
+        image_layers.at(i)->setColorTable(colours);
+    }
 
     preview = new ImagePreview(this);
     connect(this,	    SIGNAL(imageModified(const QImage&)),
@@ -124,6 +152,11 @@ QImage* ImageDocument::getImage()
     return new_image;
 }
 
+Palette* ImageDocument::getPalette()
+{
+    return palette;
+}
+
 QString ImageDocument::getPath()
 {
     return file_name;
@@ -159,11 +192,11 @@ void ImageDocument::drawImage(QImage new_image)
     this->makeChange();
 }
 
-void ImageDocument::drawLines(QPen pen, QVector<QPoint> point_pairs)
+void ImageDocument::drawLines(QVector<QPoint> point_pairs)
 {
     QImage old_image = image_layers.at(image_index)->copy();
     QPainter painter(image_layers.at(image_index));
-	painter.setPen(pen);
+        painter.setPen(myPen);
         painter.drawLines(point_pairs);
 	painter.end();
     if (undo_stack != NULL)
@@ -181,10 +214,10 @@ void ImageDocument::refreshScratchpad() {
     this->makeChange();
 }
 
-void ImageDocument::scratchLine(QPen pen, QPoint start_point, QPoint end_point)
+void ImageDocument::scratchLine(QPoint start_point, QPoint end_point)
 {
     QPainter painter(&scratchpad);
-	painter.setPen(pen);
+        painter.setPen(myPen);
         painter.drawLine(start_point, end_point);
 	painter.end();
     //    int rad = (pen.width() / 2) + 2;
@@ -294,6 +327,13 @@ void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
         views.first()->showSelection(false);
     }
     views.first()->setTool(type);
+}
+
+void ImageDocument::setColour(PaletteColour* colour)
+{
+    // TODO: add if it does not exist in the colour table?
+    myPenColor = colour->getRGB();
+    myPen.setColor(myPenColor);
 }
 
 bool ImageDocument::hasSelection()

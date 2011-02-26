@@ -4,32 +4,40 @@
 TARGET = pixeleasel
 TEMPLATE = app
 SOURCES += main.cpp \
-    Tool.cpp \
-    PenTool.cpp \
-    Layer.cpp \
-    BackgroundLayer.cpp \
-    SolidBackgroundLayer.cpp \
     ImageView.cpp \
-    LineTool.cpp \
     HotkeyBar.cpp \
-    SelectTool.cpp \
-    ImagePreview.cpp
+    ImagePreview.cpp \
+    Palette.cpp \
+    PaletteColour.cpp \
+    PaletteWidget.cpp \
+    PaletteColourWidget.cpp \
+    Layers/Layer.cpp \
+    Layers/BackgroundLayer.cpp \
+    Layers/SolidBackgroundLayer.cpp \
+    Tools/Tool.cpp \
+    Tools/LineTool.cpp \
+    Tools/PenTool.cpp \
+    Tools/SelectTool.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
 SOURCES += ImageCanvas.cpp
 SOURCES += ImageDocument.cpp
 HEADERS += PixelEasel.h \
-    Tool.h \
-    PenTool.h \
-    Layer.h \
-    BackgroundLayer.h \
-    SolidBackgroundLayer.h \
     ImageView.h \
-    LineTool.h \
     HotkeyBar.h \
-    SelectTool.h \
-    ImagePreview.h
+    ImagePreview.h \
+    Palette.h \
+    PaletteColour.h \
+    PaletteWidget.h \
+    PaletteColourWidget.h
+HEADERS += Layers/Layer.h \
+    Layers/BackgroundLayer.h \
+    Layers/SolidBackgroundLayer.h
+HEADERS += Tools/Tool.h \
+    Tools/LineTool.h \
+    Tools/PenTool.h \
+    Tools/SelectTool.h
 HEADERS += ResizeDialog.h
 HEADERS += Commands.h
 HEADERS += ImageCanvas.h

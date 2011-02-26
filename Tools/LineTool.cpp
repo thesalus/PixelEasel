@@ -1,8 +1,8 @@
 #include "LineTool.h"
 #include "ImageDocument.h"
 
-LineTool::LineTool(ImageDocument* document, QPen pen)
-    : document_m(document), scribbling(false), pen_m(pen)
+LineTool::LineTool(ImageDocument* document)
+    : document_m(document), scribbling(false)
 {
 }
 
@@ -21,7 +21,7 @@ void LineTool::mouseMoveEvent(QMouseEvent *event)
     {
 	curPoint = event->pos();
 	document_m->refreshScratchpad();
-	document_m->scratchLine(pen_m, lastPoint, curPoint);
+        document_m->scratchLine(lastPoint, curPoint);
     }
 }
 
@@ -34,7 +34,7 @@ void LineTool::mouseReleaseEvent(QMouseEvent *event)
 	curPoint = event->pos();
 	pointPairs.push_back(lastPoint);
 	pointPairs.push_back(curPoint);
-	document_m->drawLines(pen_m, pointPairs);
+        document_m->drawLines(pointPairs);
 	scribbling = false;
     }
 }

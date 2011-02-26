@@ -1,7 +1,6 @@
 #ifndef IMAGECANVAS_H
 #define IMAGECANVAS_H
 
-#include <QColor>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
@@ -20,8 +19,6 @@ public:
     void scaleImage(double factor);
     void resetScale();
 
-    void setPenColor(const QColor &);
-    void setPenWidth(int);
     void setSelectBox(QRect rect);
     void setTool(Tool::ToolTypes type);
 
@@ -52,9 +49,6 @@ private:
 
     Tool	  * currentTool;
     QRubberBand   * rubberBand;
-
-    int		    myPenWidth;
-    QColor	    myPenColor;
     QRect           mySelection;
 };
 

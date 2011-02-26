@@ -18,6 +18,8 @@
 #include <QUndoView>
 #include "ImageDocument.h"
 #include "HotkeyBar.h"
+#include "PaletteWidget.h"
+#include "PaletteColour.h"
 #include <QDockWidget>
 
 class PixelEasel : public QMainWindow {
@@ -47,6 +49,7 @@ private slots:
     void updateSave(bool);
 
     void setTool(int);
+    void setColour(PaletteColour*);
 
 private:
     void createUndoView();
@@ -54,21 +57,23 @@ private:
     void createHotkeys();
     void createMenus();
     void createDocks();
-    void adjustScrollBar(QScrollBar *scrollBar, double factor);
+    void adjustScrollBar(QScrollBar *scroll_bar, double factor);
     void setupContext(ImageDocument*);
     ImageDocument *activeDocument();
     void closeEvent(QCloseEvent* e);
 
-    QScrollArea     *scrollArea;
-    QMdiArea        *mdiArea;
-    QUndoView       *undoView;
+    QMdiArea        *mdi_area;
+    QUndoView       *undo_view;
     QClipboard      *clipboard;
 
     QStackedWidget  *previews;
     QDockWidget     *history_dock;
+    QDockWidget     *palette_dock;
     QDockWidget     *preview_dock;
     QUndoGroup      *undo_group;
 
+    QMdiSubWindow   *old_window;
+    PaletteWidget   *palette_view;
     HotkeyBar       *hotkeys;
 
     QAction *newAct;

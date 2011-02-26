@@ -11,7 +11,7 @@ class ImageDocument;
 class LineTool : public Tool
 {
 public:
-    LineTool(ImageDocument* document, QPen pen);
+    LineTool(ImageDocument* document);
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
@@ -21,7 +21,6 @@ private:
     bool	    scribbling;
     QPoint	    curPoint;
     QPoint	    lastPoint;
-    QPen	    pen_m;
 };
 
 #endif // LINETOOL_H

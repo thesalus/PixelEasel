@@ -13,11 +13,11 @@ PixelEasel::PixelEasel(QWidget *parent) :
 {
     undo_group = new QUndoGroup;
 
-    mdiArea = new QMdiArea;
-    mdiArea->setBackgroundRole(QPalette::Dark);
-    mdiArea->setViewMode(QMdiArea::TabbedView);
+    mdi_area = new QMdiArea;
+    mdi_area->setBackgroundRole(QPalette::Dark);
+    mdi_area->setViewMode(QMdiArea::TabbedView);
     // TODO: find a way to add an X to close tabs.
-    setCentralWidget(mdiArea);
+    setCentralWidget(mdi_area);
 
     createActions();
     createHotkeys();
@@ -60,7 +60,7 @@ void PixelEasel::open()
     QString fileName = fd->getOpenFileName();
     if (!fileName.isEmpty())
     {
-	QList<QMdiSubWindow*> list = mdiArea->subWindowList();
+        QList<QMdiSubWindow*> list = mdi_area->subWindowList();
 	ImageDocument* imageDocument = NULL;
 
         // ensure uniqueness
@@ -170,7 +170,7 @@ void PixelEasel::resizeImage()
 
 ImageDocument* PixelEasel::activeDocument()
 {
-    return (ImageDocument*) mdiArea->currentSubWindow();
+    return (ImageDocument*) mdi_area->currentSubWindow();
 }
 
 void PixelEasel::about()
@@ -299,20 +299,29 @@ void PixelEasel::createDocks()
     history_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, history_dock);
     createUndoView();
-    history_dock->setWidget(undoView);
+    history_dock->setWidget(undo_view);
+
+    palette_dock = new QDockWidget(tr("Palette"), this);
+    palette_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, palette_dock);
+    palette_view = new PaletteWidget(this);
+    connect(palette_view,   SIGNAL(selectedColour(PaletteColour*)),
+            this,           SLOT(setColour(PaletteColour*)));
+    history_dock->setWidget(palette_view);
 
     viewMenu->addSeparator();
     viewMenu->addAction(preview_dock->toggleViewAction());
     viewMenu->addAction(history_dock->toggleViewAction());
+    viewMenu->addAction(palette_dock->toggleViewAction());
 }
 
 void PixelEasel::createUndoView()
 {
-    undoView = new QUndoView(undo_group, history_dock);
+    undo_view = new QUndoView(undo_group, history_dock);
     // resize it somehow.
-    undoView->setWindowTitle(tr("Command List"));
-    undoView->show();
-    undoView->setAttribute(Qt::WA_QuitOnClose, false);
+    undo_view->setWindowTitle(tr("Command List"));
+    undo_view->show();
+    undo_view->setAttribute(Qt::WA_QuitOnClose, false);
 }
 
 void PixelEasel::updateActions()
@@ -343,10 +352,10 @@ void PixelEasel::updateEditActions(bool hasSelection)
     copyAct->setEnabled(hasSelection);
 }
 
-void PixelEasel::adjustScrollBar(QScrollBar *scrollBar, double factor)
+void PixelEasel::adjustScrollBar(QScrollBar *scroll_bar, double factor)
 {
-    scrollBar->setValue(int(factor * scrollBar->value()
-			    + ((factor - 1) * scrollBar->pageStep()/2)));
+    scroll_bar->setValue(int(factor * scroll_bar->value()
+                            + ((factor - 1) * scroll_bar->pageStep()/2)));
 }
 
 void PixelEasel::setupContext(ImageDocument* imageDocument)
@@ -355,24 +364,23 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
     undo_group->addStack(newUndoStack);
     undo_group->setActiveStack(newUndoStack);
     imageDocument->setUndoStack(newUndoStack);
-    mdiArea->addSubWindow(imageDocument);
+    mdi_area->addSubWindow(imageDocument);
     connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
 	    this,	    SLOT(updateActions()));
     connect(imageDocument,  SIGNAL(selectionModified(bool)),
             this,	    SLOT(updateEditActions(bool)));
-    connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
-	    this,	    SLOT(updateContext(QMdiSubWindow*)));
-    connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
-	    this,	    SLOT(updateContext(QMdiSubWindow*)));
+    connect(mdi_area,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
+            this,	    SLOT(updateContext(QMdiSubWindow*)));
     connect(undo_group,	    SIGNAL(cleanChanged(bool)),
-	    this,	    SLOT(updateSave(bool)));
+            this,	    SLOT(updateSave(bool)));
     previews->insertWidget(0, imageDocument->getPreview());
     // TODO: somehow get it to remove the widget when it gets destroyed
 }
 
 void PixelEasel::updateContext(QMdiSubWindow* window)
 {
-    if (window != 0) {
+    if (window != 0 && old_window != window) {
+        old_window = window;    // avoid repeated, unnecessary updates
         ImageDocument* document = (ImageDocument*) window;
         undo_group->setActiveStack(document->getUndoStack());
         document->setToolInActiveView(hotkeys->getToolType());
@@ -380,7 +388,7 @@ void PixelEasel::updateContext(QMdiSubWindow* window)
             preview->resize(QSize(50,50));
         this->previews->setCurrentWidget(preview);
         document->refreshScratchpad();
-
+        palette_view->changeSwatch(document->getPalette());
     }
 }
 
@@ -391,7 +399,7 @@ void PixelEasel::updateSave(bool save_state)
 
 void PixelEasel::closeEvent(QCloseEvent* e)
 {
-    QList<QMdiSubWindow *> list = mdiArea->subWindowList(QMdiArea::StackingOrder);
+    QList<QMdiSubWindow *> list = mdi_area->subWindowList(QMdiArea::StackingOrder);
     QList<QMdiSubWindow *>::iterator i;
     for (i = list.begin(); i != list.end(); ++i)
     {
@@ -408,4 +416,10 @@ void PixelEasel::setTool(int type)
 {
     if (activeDocument() != NULL)
         activeDocument()->setToolInActiveView((Tool::ToolTypes) type);
+}
+
+void PixelEasel::setColour(PaletteColour* colour)
+{
+    if (activeDocument() != NULL)
+        activeDocument()->setColour(colour);
 }

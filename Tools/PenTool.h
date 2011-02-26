@@ -11,7 +11,7 @@ class ImageDocument;
 class PenTool : public Tool
 {
 public:
-    PenTool(ImageDocument* document, QPen pen);
+    PenTool(ImageDocument* document);
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
@@ -21,7 +21,6 @@ private:
     QVector<QPoint> pointPairs;
     bool	    scribbling;
     QPoint	    lastPoint;
-    QPen	    pen_m;
 };
 
 #endif // PENTOOL_H

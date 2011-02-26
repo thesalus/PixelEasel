@@ -7,6 +7,10 @@ ImagePreview::ImagePreview(ImageDocument *document)
         background(new SolidBackgroundLayer(document->getSize(), Qt::green))
 {
     this->setAlignment(Qt::AlignCenter);
+
+    // there should be different types of previews
+    // it should resize to the size of the box
+    // or it should be in a scrollable area.
 }
 
 ImagePreview::~ImagePreview()
