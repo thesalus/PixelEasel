@@ -1,9 +1,9 @@
 #ifndef IMAGEPREVIEW_H
 #define IMAGEPREVIEW_H
 
-#include "Tool.h"
+#include "Tools/Tool.h"
 #include "ImageView.h"
-#include "BackgroundLayer.h"
+#include "Layers/BackgroundLayer.h"
 
 class ImageDocument;
 

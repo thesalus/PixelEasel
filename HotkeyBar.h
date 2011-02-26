@@ -1,7 +1,7 @@
 #ifndef HOTKEYBAR_H
 #define HOTKEYBAR_H
 
-#include "Tool.h"
+#include "Tools/Tool.h"
 
 #include <QSignalMapper>
 #include <QToolBar>

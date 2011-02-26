@@ -1,9 +1,9 @@
 #include "ImageCanvas.h"
 #include "ImageDocument.h"
-#include "PenTool.h"
-#include "LineTool.h"
-#include "SelectTool.h"
-#include "SolidBackgroundLayer.h"
+#include "Tools/PenTool.h"
+#include "Tools/LineTool.h"
+#include "Tools/SelectTool.h"
+#include "Layers/SolidBackgroundLayer.h"
 
 ImageCanvas::ImageCanvas(ImageDocument* document) :
     ImageView(document),

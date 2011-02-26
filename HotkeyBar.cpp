@@ -1,5 +1,5 @@
 #include "HotkeyBar.h"
-#include "Tool.h"
+#include "Tools/Tool.h"
 
 //TODO: allow changes to Qt::ToolButtonStyle
 

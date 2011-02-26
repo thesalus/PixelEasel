@@ -6,10 +6,10 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QRubberBand>
-#include "BackgroundLayer.h"
+#include "Layers/BackgroundLayer.h"
 #include "ImageView.h"
-#include "Layer.h"
-#include "Tool.h"
+#include "Layers/Layer.h"
+#include "Tools/Tool.h"
 
 class ImageCanvas : public ImageView
 {

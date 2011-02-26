@@ -1,7 +1,7 @@
 #ifndef IMAGEVIEW_H
 #define IMAGEVIEW_H
 
-#include "Tool.h"
+#include "Tools/Tool.h"
 #include <QLabel>
 
 class ImageDocument;
