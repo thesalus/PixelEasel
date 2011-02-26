@@ -3,9 +3,9 @@
 
 //TODO: allow changes to Qt::ToolButtonStyle
 
-HotkeyBar::HotkeyBar(QWidget *parent, unsigned int maxKeys) :
+HotkeyBar::HotkeyBar(QWidget *parent, unsigned int max_keys) :
     QToolBar("Hotkeys", parent),
-    maxHotkeys(maxKeys),
+    max_hotkeys(max_keys),
     selection(Tool::PenTool),
     buttons(new QToolButton*[10]),
     mapper(new QSignalMapper(this))
@@ -13,7 +13,7 @@ HotkeyBar::HotkeyBar(QWidget *parent, unsigned int maxKeys) :
     createButtons();
     // TODO: maintain selection information somewhere (off to the side?) or merely show it as selected
 
-    for (unsigned int i = 0; i < maxHotkeys; i++)
+    for (unsigned int i = 0; i < max_hotkeys; i++)
     {
         addWidget(buttons[i]);
         connect(buttons[i], SIGNAL(clicked()),
@@ -45,16 +45,21 @@ void HotkeyBar::createButtons()
     mapper->setMapping(buttons[2], (int) Tool::SelectTool);
 }
 
-void HotkeyBar::setTool(int newSelection)
+void HotkeyBar::setTool(int new_selection)
 {
     QToolButton *foo;
     if ((foo = (QToolButton*)mapper->mapping((int) selection)) != NULL)
     {
         foo->setDown(false);
     }
-    if ((foo = (QToolButton*)mapper->mapping(newSelection)) != NULL)
+    if ((foo = (QToolButton*)mapper->mapping(new_selection)) != NULL)
     {
         foo->setDown(true);
     }
-    selection = (Tool::ToolTypes) newSelection;
+    selection = (Tool::ToolTypes) new_selection;
+}
+
+Tool::ToolTypes HotkeyBar::getToolType()
+{
+    return selection;
 }

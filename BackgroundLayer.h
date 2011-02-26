@@ -17,11 +17,13 @@ public:
     };
 
     BackgroundLayer(Pattern pattern, QSize size);
+    virtual BackgroundLayer* copySized(QSize size) = 0;
 
 protected:
     Pattern	    pattern_m;
     QColor	    primaryColour_m,
 		    secondaryColour_m;
+    QSize           size_m;
 
 };
 

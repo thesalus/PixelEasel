@@ -11,7 +11,7 @@ PixelEasel::PixelEasel(QWidget *parent) :
     QMainWindow(parent),
     clipboard(QApplication::clipboard())
 {
-    undoGroup = new QUndoGroup;
+    undo_group = new QUndoGroup;
 
     mdiArea = new QMdiArea;
     mdiArea->setBackgroundRole(QPalette::Dark);
@@ -84,7 +84,7 @@ void PixelEasel::save()
     if (activeDocument()->hasFile())
     {
         activeDocument()->save();
-        saveAct->setEnabled(!undoGroup->isClean());
+        saveAct->setEnabled(!undo_group->isClean());
     }
 }
 
@@ -97,7 +97,7 @@ void PixelEasel::saveAs()
 	return;
     activeDocument()->setFileName(fileName);
     activeDocument()->save();
-    saveAct->setEnabled(!undoGroup->isClean());
+    saveAct->setEnabled(!undo_group->isClean());
 }
 
 void PixelEasel::cut()
@@ -199,9 +199,9 @@ void PixelEasel::createActions()
      exitAct->setShortcut(QKeySequence::Quit);
      connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
 
-     undoAct = undoGroup->createUndoAction(this, tr("&Undo"));
+     undoAct = undo_group->createUndoAction(this, tr("&Undo"));
      undoAct->setShortcuts(QKeySequence::Undo);
-     redoAct = undoGroup->createRedoAction(this, tr("&Redo"));
+     redoAct = undo_group->createRedoAction(this, tr("&Redo"));
      redoAct->setShortcuts(QKeySequence::Redo);
 
      cutAct = new QAction(tr("Cu&t"), this);
@@ -289,22 +289,26 @@ void PixelEasel::createMenus()
 
 void PixelEasel::createDocks()
 {
-    previewDock = new QDockWidget(tr("Preview"), this);
-    previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, previewDock);
+    preview_dock = new QDockWidget(tr("Preview"), this);
+    preview_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, preview_dock);
     previews = new QStackedWidget();
-    previewDock->setWidget(previews);
+    preview_dock->setWidget(previews);
 
-    historyDock = new QDockWidget(tr("History"), this);
-    historyDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, historyDock);
+    history_dock = new QDockWidget(tr("History"), this);
+    history_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, history_dock);
     createUndoView();
-    historyDock->setWidget(undoView);
+    history_dock->setWidget(undoView);
+
+    viewMenu->addSeparator();
+    viewMenu->addAction(preview_dock->toggleViewAction());
+    viewMenu->addAction(history_dock->toggleViewAction());
 }
 
 void PixelEasel::createUndoView()
 {
-    undoView = new QUndoView(undoGroup, historyDock);
+    undoView = new QUndoView(undo_group, history_dock);
     // resize it somehow.
     undoView->setWindowTitle(tr("Command List"));
     undoView->show();
@@ -348,8 +352,8 @@ void PixelEasel::adjustScrollBar(QScrollBar *scrollBar, double factor)
 void PixelEasel::setupContext(ImageDocument* imageDocument)
 {
     QUndoStack *newUndoStack = new QUndoStack();
-    undoGroup->addStack(newUndoStack);
-    undoGroup->setActiveStack(newUndoStack);
+    undo_group->addStack(newUndoStack);
+    undo_group->setActiveStack(newUndoStack);
     imageDocument->setUndoStack(newUndoStack);
     mdiArea->addSubWindow(imageDocument);
     connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
@@ -360,7 +364,7 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
 	    this,	    SLOT(updateContext(QMdiSubWindow*)));
     connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
 	    this,	    SLOT(updateContext(QMdiSubWindow*)));
-    connect(undoGroup,	    SIGNAL(cleanChanged(bool)),
+    connect(undo_group,	    SIGNAL(cleanChanged(bool)),
 	    this,	    SLOT(updateSave(bool)));
     previews->insertWidget(0, imageDocument->getPreview());
     // TODO: somehow get it to remove the widget when it gets destroyed
@@ -369,16 +373,20 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
 void PixelEasel::updateContext(QMdiSubWindow* window)
 {
     if (window != 0) {
-        undoGroup->setActiveStack(((ImageDocument*) window)->getUndoStack());
-        ImagePreview* preview = ((ImageDocument*) window)->getPreview();
-        preview->resize(QSize(50,50));
-        previews->setCurrentWidget(preview);
+        ImageDocument* document = (ImageDocument*) window;
+        undo_group->setActiveStack(document->getUndoStack());
+        document->setToolInActiveView(hotkeys->getToolType());
+        ImagePreview* preview = document->getPreview();
+            preview->resize(QSize(50,50));
+        this->previews->setCurrentWidget(preview);
+        document->refreshScratchpad();
+
     }
 }
 
-void PixelEasel::updateSave(bool saveState)
+void PixelEasel::updateSave(bool save_state)
 {
-    saveAct->setEnabled(!saveState && activeDocument()->hasFile());
+    saveAct->setEnabled(!save_state && activeDocument()->hasFile());
 }
 
 void PixelEasel::closeEvent(QCloseEvent* e)

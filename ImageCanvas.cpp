@@ -11,7 +11,6 @@ ImageCanvas::ImageCanvas(ImageDocument* document) :
     rubberBand(0)
 {
     this->setBackgroundRole(QPalette::Base);
-    this->setStyleSheet("QLabel { background-color: #999999 }");
 
     myPenWidth = 1;
     myPenColor = Qt::black;
@@ -36,15 +35,15 @@ void ImageCanvas::resetScale()
     this->setScale(1.0);
 }
 
-void ImageCanvas::setScale(double newFactor)
+void ImageCanvas::setScale(double new_factor)
 {
-    scaleFactor = newFactor;;
+    scaleFactor = new_factor;;
     //  TODO: Need to find a way to pass this up to the main window, or set it as an internal state that the main window polls
     //  zoomInAct->setEnabled(scaleFactor < 3.0);
     //  zoomOutAct->setEnabled(scaleFactor > 0.333);
-    QImage * newImage = document_m->getImage();
-    this->refreshImage(*newImage);
-    delete newImage;	
+    QImage* new_image = document_m->getImage();
+    this->refreshImage(*new_image);
+    delete new_image;
 }
 
 // don't need to let users scale by a constant factor
@@ -58,20 +57,27 @@ void ImageCanvas::scaleImage(double factor)
 /*
  * Edit Properties
  */
-void ImageCanvas::setPenColor(const QColor &newColor)
+void ImageCanvas::setPenColor(const QColor &new_color)
 {
-    myPenColor = newColor;
+    myPenColor = new_color;
 }
 
-void ImageCanvas::setPenWidth(int newWidth)
+void ImageCanvas::setPenWidth(int new_width)
 {
-    myPenWidth = newWidth;
+    myPenWidth = new_width;
 }
 
 void ImageCanvas::refreshImage(const QImage& image)
 {
-    QSize   new_size = image.size()*scaleFactor;
-    QImage  new_image = ((Layer) image.copy()).layOver(background->copy());
+    QSize new_size = image.size()*scaleFactor;
+
+    if (image.size() != background->size())
+    {
+        BackgroundLayer * replacement = background->copySized(image.size());
+        delete background;
+        background = replacement;
+    }
+    QImage new_image = ((Layer) image.copy()).layOver(background->copy());
 
     this->setPixmap(QPixmap::fromImage(new_image.scaled(new_size)));
     this->resize(new_size);

@@ -8,7 +8,7 @@ class SolidBackgroundLayer : public BackgroundLayer
 {
 public:
     SolidBackgroundLayer(QSize size, QColor colour);
-    QSize size_m;
+    BackgroundLayer* copySized(QSize size);
 };
 
 #endif // SOLIDBACKGROUNDLAYER_H

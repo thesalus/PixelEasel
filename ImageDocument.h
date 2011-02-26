@@ -20,30 +20,30 @@ public:
     ImageDocument(QSize);
     ~ImageDocument();
 
-    void scaleImage(double);
+    void scaleImage(double scale_factor);
     void resetScale();
 // Permanent Actions
     void replaceImage(QImage new_image);
     void drawImage(QImage new_image);
-    void drawLines(QPen pen, QVector<QPoint> pointPairs);
+    void drawLines(QPen pen, QVector<QPoint> point_pairs);
 // Temporary Actions
     void refreshScratchpad();
-    void scratchLine(QPen pen, QPoint startPoint, QPoint endPoint);
+    void scratchLine(QPen pen, QPoint start_point, QPoint end_point);
 
     void save();
     void setFileName(QString file);
 
     void closeEvent(QCloseEvent* event);
 
-    QImage *	    getImage();
+    QImage*	    getImage();
     QString	    getPath();
     QSize	    getSize();
-    QUndoStack *    getUndoStack();
+    QUndoStack*     getUndoStack();
     ImagePreview*   getPreview();
 
     void            setSelection(QRect rect);
-    void	    setSize(QSize newSize);
-    void	    setUndoStack(QUndoStack* undoStack_);
+    void	    setSize(QSize new_size);
+    void	    setUndoStack(QUndoStack* new_undo_stack);
 
     bool            hasFile();
     bool            hasSelection();
@@ -64,19 +64,19 @@ signals:
     bool selectionModified(bool);
 
 private:
-    static int	    untitled_counter;
-    QString	    fileName;
-    bool            hasFileFlag;
-    bool            selectionChanged;
+    static int	    untitled_counter;       // tracks the number that will be appended to new unnamed documents
+    QString	    file_name;
+    bool            has_file_flag;
+    bool            selection_changed_flag;
     bool            emptyScratchpadSelection;
-    int		    imageIndex;
-    QVector<Layer*> imageLayers;
+    int		    image_index;
+    QVector<Layer*> image_layers;
     Layer	    scratchpad;
     QVector<ImageView*>	views;
-    QScrollArea*    scrollArea;
-    QUndoStack*	    undoStack;
+    QScrollArea*    scroll_area;
+    QUndoStack*	    undo_stack;
     QImage          preScratch;
-    QPoint          scratchpadTranslation;
+    QPoint          scratchpad_translation;
     ImagePreview*   preview;
 
     void            clearRect(QRect rect);

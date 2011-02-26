@@ -19,8 +19,8 @@ Layer::Layer(const QSize & size, QImage::Format format)
 QImage Layer::layOver (QImage bottomLayer)
 {
     QPainter painter(&bottomLayer);
-    painter.drawImage(QPoint(0,0),(*this));
-    painter.end();
+        painter.drawImage(QPoint(0,0),(*this));
+        painter.end();
 
     return bottomLayer;
 }

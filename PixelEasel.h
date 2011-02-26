@@ -64,11 +64,10 @@ private:
     QUndoView       *undoView;
     QClipboard      *clipboard;
 
-    QDockWidget     *dock;
-    QDockWidget     *previewDock;
     QStackedWidget  *previews;
-    QDockWidget     *historyDock;
-    QUndoGroup      *undoGroup;
+    QDockWidget     *history_dock;
+    QDockWidget     *preview_dock;
+    QUndoGroup      *undo_group;
 
     HotkeyBar       *hotkeys;
 

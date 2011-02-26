@@ -6,45 +6,45 @@
 int ImageDocument::untitled_counter = 0;
 
 ImageDocument::ImageDocument(QSize size)
-    :	fileName("Untitled"+(untitled_counter > 0 ? " "+QString::number(untitled_counter+1) : "")),
-        hasFileFlag(false),
-        selectionChanged(false),
+    :	file_name("Untitled"+(untitled_counter > 0 ? " "+QString::number(untitled_counter+1) : "")),
+        has_file_flag(false),
+        selection_changed_flag(false),
         emptyScratchpadSelection(true),
-	imageIndex(0),
+        image_index(0),
 	scratchpad(size, QImage::Format_ARGB32),
-        undoStack(NULL)
+        undo_stack(NULL)
 {
     // create a transparent background
     QImage image(size, QImage::Format_ARGB32);
 	image.fill(qRgba(255, 255, 255, 0));
-	imageLayers << (new Layer(image));
+        image_layers << (new Layer(image));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     untitled_counter++;
     initialize();
 }
 
-ImageDocument::ImageDocument(QString fileName_)
-    :	fileName(fileName_),
-        hasFileFlag(true),
-        selectionChanged(false),
+ImageDocument::ImageDocument(QString new_file_name)
+    :	file_name(new_file_name),
+        has_file_flag(true),
+        selection_changed_flag(false),
         emptyScratchpadSelection(true),
-	imageIndex(0),
+        image_index(0),
 	scratchpad(QSize(1,1), QImage::Format_ARGB32),
-	undoStack(NULL)
+        undo_stack(NULL)
 {
-    QImage image(fileName);
+    QImage image(file_name);
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     if (image.isNull())
     {
 	QMessageBox::information(this, tr("Image Canvas"),
-				 tr("Cannot load %1.").arg(fileName));
+                                 tr("Cannot load %1.").arg(file_name));
 	this->close();
     }
     else
     {
 	scratchpad = QImage(image.size(), QImage::Format_ARGB32);
 	    scratchpad.fill(qRgba(255, 255, 255, 0));
-	imageLayers << (new Layer(image));
+        image_layers << (new Layer(image));
 	initialize();
     }
 }
@@ -60,20 +60,20 @@ void ImageDocument::initialize()
             this,	    SLOT(passSelectionModified()));
     views << canvas;
 
-    scratchpadTranslation = QPoint(0,0);
+    scratchpad_translation = QPoint(0,0);
 
-    scrollArea = new QScrollArea;
-    scrollArea->setBackgroundRole(QPalette::Base);
-    scrollArea->setAlignment(Qt::AlignCenter);
-    scrollArea->setStyleSheet("QLabel { background-color: #999999 }");
-    scrollArea->setWidget(canvas);
+    scroll_area = new QScrollArea;
+    scroll_area->setBackgroundRole(QPalette::Base);
+    scroll_area->setAlignment(Qt::AlignCenter);
+    scroll_area->setStyleSheet("QLabel { background-color: #999999 }");
+    scroll_area->setWidget(canvas);
 
     preview = new ImagePreview(this);
     connect(this,	    SIGNAL(imageModified(const QImage&)),
             preview,	    SLOT(refreshImage(const QImage&)));
 
-    this->setWidget(scrollArea);
-    this->setWindowTitle(fileName.split("/").last());
+    this->setWidget(scroll_area);
+    this->setWindowTitle(file_name.split("/").last());
     this->resize(128, 128);
     canvas->show();
     this->makeChange();
@@ -81,14 +81,14 @@ void ImageDocument::initialize()
 
 ImageDocument::~ImageDocument()
 {
-    delete undoStack;
-    delete scrollArea;
+    delete undo_stack;
+    delete scroll_area;
 }
 
-void ImageDocument::scaleImage(double scaleFactor)
+void ImageDocument::scaleImage(double scale_factor)
 {
     // TODO: how do we do this part? separate subwindow?
-    ((ImageCanvas*) views.first())->scaleImage(scaleFactor);
+    ((ImageCanvas*) views.first())->scaleImage(scale_factor);
 }
 
 void ImageDocument::resetScale()
@@ -99,11 +99,11 @@ void ImageDocument::resetScale()
 void ImageDocument::save()
 {
     // Expand this to include other file types
-    // TODO: do we need to make use of hasFileFlag
-    if (this->getImage()->save(fileName, "PNG"))
+    // TODO: do we need to make use of has_file_flag
+    if (this->getImage()->save(file_name, "PNG"))
     {
-	if (undoStack != NULL && !undoStack->isClean())
-	    undoStack->setClean();
+        if (undo_stack != NULL && !undo_stack->isClean())
+            undo_stack->setClean();
     }
     makeChange();
 }
@@ -112,12 +112,12 @@ QImage* ImageDocument::getImage()
 {
 //    scratchpad = Layer(image.size(), QImage::Format_ARGB32);
     Layer image(scratchpad.size(),  QImage::Format_ARGB32);
-    for (int i = 0; i < imageLayers.size(); ++i) {
-	image = imageLayers.at(i)->layOver(image);
+    for (int i = 0; i < image_layers.size(); ++i) {
+        image = image_layers.at(i)->layOver(image);
     }
     Layer temp(scratchpad.size(), QImage::Format_ARGB32);
     QPainter painter(&temp);
-        painter.drawImage(scratchpadTranslation, scratchpad);
+        painter.drawImage(scratchpad_translation, scratchpad);
         painter.end();
 
     QImage *new_image = new QImage(temp.layOver(image));
@@ -126,7 +126,7 @@ QImage* ImageDocument::getImage()
 
 QString ImageDocument::getPath()
 {
-    return fileName;
+    return file_name;
 }
 
 ImagePreview* ImageDocument::getPreview()
@@ -142,50 +142,50 @@ QSize ImageDocument::getSize()
 
 QUndoStack* ImageDocument::getUndoStack()
 {
-    return undoStack;
+    return undo_stack;
 }
 
 void ImageDocument::replaceImage(QImage new_image)
 {
-    imageLayers.replace(imageIndex, new Layer(new_image));
+    image_layers.replace(image_index, new Layer(new_image));
     this->makeChange();
 }
 
 void ImageDocument::drawImage(QImage new_image)
 {
-    QPainter painter(imageLayers.at(imageIndex));
-    painter.drawImage(QPoint(0,0), new_image);
-    painter.end();
+    QPainter painter(image_layers.at(image_index));
+        painter.drawImage(QPoint(0,0), new_image);
+        painter.end();
     this->makeChange();
 }
 
-void ImageDocument::drawLines(QPen pen, QVector<QPoint> pointPairs)
+void ImageDocument::drawLines(QPen pen, QVector<QPoint> point_pairs)
 {
-    QImage old_image = imageLayers.at(imageIndex)->copy();
-    QPainter painter(imageLayers.at(imageIndex));
+    QImage old_image = image_layers.at(image_index)->copy();
+    QPainter painter(image_layers.at(image_index));
 	painter.setPen(pen);
-	painter.drawLines(pointPairs);
+        painter.drawLines(point_pairs);
 	painter.end();
-    if (undoStack != NULL)
+    if (undo_stack != NULL)
     {
-	AddCommand * command = new AddCommand(old_image, *imageLayers.at(imageIndex), this);
+        AddCommand * command = new AddCommand(old_image, *image_layers.at(image_index), this);
 	command->setText("Draw Line");
-	undoStack->push(command);
+        undo_stack->push(command);
     }
     refreshScratchpad();
     this->makeChange();
 }
 
 void ImageDocument::refreshScratchpad() {
-    scratchpad = Layer(imageLayers.at(imageIndex)->size(), QImage::Format_ARGB32);
+    scratchpad = Layer(image_layers.at(image_index)->size(), QImage::Format_ARGB32);
     this->makeChange();
 }
 
-void ImageDocument::scratchLine(QPen pen, QPoint startPoint, QPoint endPoint)
+void ImageDocument::scratchLine(QPen pen, QPoint start_point, QPoint end_point)
 {
     QPainter painter(&scratchpad);
 	painter.setPen(pen);
-	painter.drawLine(startPoint, endPoint);
+        painter.drawLine(start_point, end_point);
 	painter.end();
     //    int rad = (pen.width() / 2) + 2;
     //    this->update(QRect(startPoint, endPoint).normalized().adjusted(-rad, -rad, +rad, +rad));
@@ -200,7 +200,7 @@ void ImageDocument::makeChange()
 
 void ImageDocument::updateTitle(bool state)
 {
-    QString title = fileName.split("/").last();
+    QString title = file_name.split("/").last();
     if (!state)
 	title += "*";
     this->setWindowTitle(title);
@@ -208,41 +208,41 @@ void ImageDocument::updateTitle(bool state)
 
 void ImageDocument::setFileName(QString file)
 {
-    fileName = file;
-    hasFileFlag = true;
+    file_name = file;
+    has_file_flag = true;
     makeChange();
     // TODO: we're duplicating the makechange call here when saving as...
 }
 
-void ImageDocument::setSize(QSize newSize)
+void ImageDocument::setSize(QSize new_size)
 {
-    Layer newImage(newSize, QImage::Format_RGB32);
+    Layer newImage(new_size, QImage::Format_ARGB32);
     QPainter painter(&newImage);
-    painter.drawImage(QPoint(0,0), *imageLayers.at(imageIndex));
-    painter.end();
-    if (undoStack != NULL)
+        painter.drawImage(QPoint(0,0), *image_layers.at(image_index));
+        painter.end();
+    if (undo_stack != NULL)
     {
-	AddCommand * command = new AddCommand(*imageLayers.at(imageIndex), newImage, this);
+        AddCommand* command = new AddCommand(*image_layers.at(image_index), newImage, this);
 	command->setText("Resize Image");
-	undoStack->push(command);
+        undo_stack->push(command);
     }
-    imageLayers.replace(imageIndex, new Layer(newImage));
+    image_layers.replace(image_index, new Layer(newImage));
     this->makeChange();
 }
 
-void ImageDocument::setUndoStack(QUndoStack* undoStack_)
+void ImageDocument::setUndoStack(QUndoStack* new_undo_stack)
 {
-    undoStack = undoStack_;
-    connect(undoStack,	    SIGNAL(cleanChanged(bool)),
+    undo_stack = new_undo_stack;
+    connect(undo_stack,	    SIGNAL(cleanChanged(bool)),
 	    this,	    SLOT(updateTitle(bool)));
 }
 
 void ImageDocument::closeEvent(QCloseEvent* event)
 {
     // figure out a way to make this more convenient for users when dealing with multiple files.
-    if (!undoStack->isClean())
+    if (!undo_stack->isClean())
     {
-        switch( QMessageBox::information( this, "Unsaved Changes in "+fileName.split("/").last(),
+        switch( QMessageBox::information( this, "Unsaved Changes in "+file_name.split("/").last(),
                                               "The document has been changed since "
                                               "the last save.",
                                               "&Save Now", "&Discard Changes", "&Cancel",
@@ -250,17 +250,17 @@ void ImageDocument::closeEvent(QCloseEvent* event)
         {
             case 0:
                 // if there is no filename, then query the user for one
-                if (!hasFileFlag)
+                if (!has_file_flag)
                 {
-                    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
+                    QString new_file_name = QFileDialog::getSaveFileName(this, tr("Save As"),
                                                     QDir::currentPath(),
                                                     tr("Images (*.png *.gif)"));
-                    if (fileName.isEmpty())
+                    if (new_file_name.isEmpty())
                     {
                         event->ignore();    // TODO: should we ask them again?
                         break;
                     }
-                    setFileName(fileName);
+                    setFileName(new_file_name);
                 }
                 save();
                 event->accept();
@@ -282,7 +282,7 @@ void ImageDocument::closeEvent(QCloseEvent* event)
 
 bool ImageDocument::hasFile()
 {
-    return hasFileFlag;
+    return has_file_flag;
 }
 
 void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
@@ -304,7 +304,7 @@ bool ImageDocument::hasSelection()
 
 void ImageDocument::clearRect(QRect rect)
 {
-    QPainter painter(imageLayers.at(imageIndex));
+    QPainter painter(image_layers.at(image_index));
         painter.setBackgroundMode(Qt::TransparentMode);
         painter.setCompositionMode(QPainter::CompositionMode_DestinationOut);
         painter.eraseRect(rect);
@@ -317,16 +317,16 @@ void ImageDocument::cut(QClipboard *clipboard)
     // TODO BUG: we need to merge the scratchpad first
     if (views.first()->hasSelection())
     {
-        QImage oldImage = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
+        QImage oldImage = image_layers.at(image_index)->copy(image_layers.at(image_index)->rect());
         QRect selection = views.first()->getSelection();
-        clipboard->setImage(imageLayers.at(imageIndex)->copy(selection));
+        clipboard->setImage(image_layers.at(image_index)->copy(selection));
         views.first()->showSelection(false);
         clearRect(selection);
-        if (undoStack != NULL)
+        if (undo_stack != NULL)
         {
-            AddCommand * command = new AddCommand(oldImage, *imageLayers.at(imageIndex), this);
+            AddCommand * command = new AddCommand(oldImage, *image_layers.at(image_index), this);
             command->setText("Cut");
-            undoStack->push(command);
+            undo_stack->push(command);
         }
     }
 }
@@ -336,7 +336,7 @@ void ImageDocument::copy(QClipboard *clipboard)
     if (views.first()->hasSelection())
     {
         QRect selection = views.first()->getSelection();
-        clipboard->setImage(imageLayers.at(imageIndex)->copy(selection));
+        clipboard->setImage(image_layers.at(image_index)->copy(selection));
     }
 }
 
@@ -344,7 +344,7 @@ void ImageDocument::paste(QClipboard *clipboard)
 {
     if(clipboard->mimeData()->hasImage())
     {
-        preScratch = imageLayers.at(imageIndex)->copy(imageLayers.at(imageIndex)->rect());
+        preScratch = image_layers.at(image_index)->copy(image_layers.at(image_index)->rect());
         QPainter painter(&scratchpad);
             painter.drawImage(QPoint(0,0), clipboard->image());
             painter.end();
@@ -357,29 +357,29 @@ void ImageDocument::paste(QClipboard *clipboard)
 void ImageDocument::setSelection(QRect rect)
 {
     views.first()->setSelectBox(rect);
-    selectionChanged = true;
+    selection_changed_flag = true;
     emit makeChange();
 }
 
 void ImageDocument::passSelectionModified()
 {
     // merge the selected image back onto the original if it was changed
-    if (selectionChanged)
+    if (selection_changed_flag)
     {
-        QPainter painter(imageLayers.at(imageIndex));
-            painter.drawImage(scratchpadTranslation, scratchpad);
+        QPainter painter(image_layers.at(image_index));
+            painter.drawImage(scratchpad_translation, scratchpad);
             painter.end();
         refreshScratchpad();
-        if (undoStack != NULL)
+        if (undo_stack != NULL)
         {
-            AddCommand * command = new AddCommand(preScratch, *imageLayers.at(imageIndex), this);
+            AddCommand * command = new AddCommand(preScratch, *image_layers.at(image_index), this);
             command->setText("Merge Selection");
-            undoStack->push(command);
+            undo_stack->push(command);
         }
         // TODO: don't put this on the stack if we cancel
-        selectionChanged = false;
+        selection_changed_flag = false;
         emptyScratchpadSelection = true;
-        scratchpadTranslation = QPoint(0,0);
+        scratchpad_translation = QPoint(0,0);
     }
     emit selectionModified(hasSelection());
 }
@@ -390,8 +390,8 @@ void ImageDocument::selectToScratchpad()
 {
     // is it a bad idea to clip it out of the image? Yes.
     QRect rect = views.first()->getSelection();
-    preScratch = imageLayers.at(imageIndex)->copy();
-    QImage moved = imageLayers.at(imageIndex)->copy(rect);
+    preScratch = image_layers.at(image_index)->copy();
+    QImage moved = image_layers.at(image_index)->copy(rect);
     clearRect(rect);
     QPainter painter(&scratchpad);
         painter.setBackgroundMode(Qt::TransparentMode);
@@ -401,7 +401,7 @@ void ImageDocument::selectToScratchpad()
         painter.drawImage(rect.topLeft(), moved);
         painter.end();
     emptyScratchpadSelection = false;
-    selectionChanged = true;
+    selection_changed_flag = true;
     emit makeChange();
 }
 
@@ -411,6 +411,6 @@ void ImageDocument::translateSelection(QPoint point)
     {
         selectToScratchpad();
     }
-    scratchpadTranslation += point;
+    scratchpad_translation += point;
     emit makeChange();
 }

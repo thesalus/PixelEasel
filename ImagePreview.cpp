@@ -7,8 +7,6 @@ ImagePreview::ImagePreview(ImageDocument *document)
         background(new SolidBackgroundLayer(document->getSize(), Qt::green))
 {
     this->setAlignment(Qt::AlignCenter);
-    // TODO: I don't know why this doesn't recentre
-    this->repaint();
 }
 
 ImagePreview::~ImagePreview()
