@@ -18,7 +18,7 @@ ImageDocument::ImageDocument(QSize size)
 {
     // create a transparent background
     QImage image(size, QImage::Format_ARGB32);
-	image.fill(qRgba(255, 255, 255, 0));
+        image.fill(qRgba(0, 0, 0, 0));
         image_layers << (new Layer(image));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
     untitled_counter++;
@@ -46,7 +46,7 @@ ImageDocument::ImageDocument(QString new_file_name)
     else
     {
 	scratchpad = QImage(image.size(), QImage::Format_ARGB32);
-	    scratchpad.fill(qRgba(255, 255, 255, 0));
+            scratchpad.fill(qRgba(0, 0, 0, 0));
         image_layers << (new Layer(image));
 	initialize();
     }
@@ -77,15 +77,14 @@ void ImageDocument::initialize()
 
     // grab all the colours from each layer and put it in the palette
     // TODO: make the list unique
-    QVector<QRgb>   colours;
     QHash<QRgb, int>     colour_hash;
     for (int i = 0; i < image_layers.size(); ++i) {
         Layer *image = image_layers.at(i);
         for (int x = 0; x < image->width(); x++) {
             for (int y = 0; y < image->height(); y++) {
                 QRgb key = image->pixel(x,y);
-                if (colour_hash.value(key, 0) == 0) {
-                    colours.push_back(key);
+                if (key != Qt::transparent && colour_hash.value(key, 0) == 0) {
+                    colourTable.push_back(key);
                     colour_hash[key] = 1;
                     palette->addColour(key);
                 }
@@ -93,7 +92,7 @@ void ImageDocument::initialize()
         }
     }
     for (int i = 0; i < image_layers.size(); ++i) {
-        image_layers.at(i)->setColorTable(colours);
+        image_layers.at(i)->setColorTable(colourTable);
     }
 
     preview = new ImagePreview(this);
@@ -332,8 +331,17 @@ void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
 void ImageDocument::setColour(PaletteColour* colour)
 {
     // TODO: add if it does not exist in the colour table?
-    myPenColor = colour->getRGB();
+    //          then tell the PaletteWidget so that it may add it.
+    QRgb rgb = colour->getRGBA();
+    myPenColor = rgb;
     myPen.setColor(myPenColor);
+    if (colourTable.indexOf(rgb) == -1) {
+        colourTable.push_back(rgb);
+        for (int i = 0; i < image_layers.size(); ++i) {
+            image_layers.at(i)->setColorTable(colourTable);
+        }
+        palette->addColour(rgb);
+    }
 }
 
 bool ImageDocument::hasSelection()
@@ -391,6 +399,23 @@ void ImageDocument::paste(QClipboard *clipboard)
         setSelection(QRect(QPoint(0,0), clipboard->image().size()));
         emptyScratchpadSelection = false;
         // the pasting action gets recorded when they actually release the selection
+    }
+}
+
+void ImageDocument::clearSelection()
+{
+    if (views.first()->hasSelection())
+    {
+        QImage oldImage = image_layers.at(image_index)->copy(image_layers.at(image_index)->rect());
+        QRect selection = views.first()->getSelection();
+        views.first()->showSelection(false);
+        clearRect(selection);
+        if (undo_stack != NULL)
+        {
+            AddCommand * command = new AddCommand(oldImage, *image_layers.at(image_index), this);
+            command->setText("Delete");
+            undo_stack->push(command);
+        }
     }
 }
 

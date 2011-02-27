@@ -6,7 +6,7 @@ PaletteColourWidget::PaletteColourWidget(QWidget *parent, PaletteColour* colour_
 {
     QSize size(25,25);
     QImage image(size, QImage::Format_RGB32);
-        image.fill(colour->getRGB());
+        image.fill(colour->getRGBA());
     this->setPixmap(QPixmap::fromImage(image));
     this->repaint();
 }

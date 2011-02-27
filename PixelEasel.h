@@ -36,6 +36,7 @@ private slots:
     void copy();
     void cut();
     void paste();
+    void clearSelection();
     void selectAll();
     void zoomIn();
     void zoomOut();
@@ -86,6 +87,7 @@ private:
     QAction *cutAct;
     QAction *pasteAct;
 
+    QAction *clearSelectionAct;
     QAction *selectAllAct;
 
     QAction *zoomInAct;

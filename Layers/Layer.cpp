@@ -13,7 +13,7 @@ Layer::Layer(const QString & fileName, const char* format)
 Layer::Layer(const QSize & size, QImage::Format format)
     : QImage(size, format)
 {
-    this->fill(qRgba(255, 255, 255, 0));
+    this->fill(qRgba(0, 0, 0, 0));
 }
 
 QImage Layer::layOver (QImage bottomLayer)

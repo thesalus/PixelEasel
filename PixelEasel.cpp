@@ -131,6 +131,15 @@ void PixelEasel::paste()
     }
 }
 
+void PixelEasel::clearSelection()
+{
+    ImageDocument *doc = activeDocument();
+    if (doc != 0)
+    {
+        doc->clearSelection();
+    }
+}
+
 void PixelEasel::selectAll()
 {
     ImageDocument *doc = activeDocument();
@@ -213,6 +222,9 @@ void PixelEasel::createActions()
      pasteAct = new QAction(tr("&Paste"), this);
      pasteAct->setShortcut(QKeySequence::Paste);
      connect(pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
+     clearSelectionAct = new QAction(tr("C&lear Selection"), this);
+     clearSelectionAct->setShortcut(QKeySequence::Delete);
+     connect(clearSelectionAct, SIGNAL(triggered()), this, SLOT(clearSelection()));
 
      selectAllAct = new QAction(tr("&Select All"), this);
      selectAllAct->setShortcut(QKeySequence::SelectAll);
@@ -268,6 +280,7 @@ void PixelEasel::createMenus()
      editMenu->addAction(copyAct);
      editMenu->addAction(pasteAct);
      editMenu->addSeparator();
+     editMenu->addAction(clearSelectionAct);
      editMenu->addAction(selectAllAct);
      menuBar()->addMenu(editMenu);
 
@@ -307,7 +320,7 @@ void PixelEasel::createDocks()
     palette_view = new PaletteWidget(this);
     connect(palette_view,   SIGNAL(selectedColour(PaletteColour*)),
             this,           SLOT(setColour(PaletteColour*)));
-    history_dock->setWidget(palette_view);
+    palette_dock->setWidget(palette_view);
 
     viewMenu->addSeparator();
     viewMenu->addAction(preview_dock->toggleViewAction());
@@ -348,6 +361,7 @@ void PixelEasel::updateEditActions(bool hasSelection)
     {
         hasSelection = false;
     }
+    clearSelectionAct->setEnabled(hasSelection);
     cutAct->setEnabled(hasSelection);
     copyAct->setEnabled(hasSelection);
 }

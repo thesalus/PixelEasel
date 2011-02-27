@@ -59,6 +59,8 @@ public:
     void            copy(QClipboard *clipboard);
     void            paste(QClipboard *clipboard);
 
+    void            clearSelection();
+
 private slots:
     void updateTitle(bool);
     void passSelectionModified();
@@ -83,6 +85,7 @@ private:
     QPoint          scratchpad_translation;
     ImagePreview*   preview;
     Palette*        palette;
+    QVector<QRgb>   colourTable;
 
     QPen            myPen;
     int		    myPenWidth;

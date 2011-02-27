@@ -5,7 +5,7 @@ PaletteColour::PaletteColour(QColor colour_) :
 {
 }
 
-QRgb PaletteColour::getRGB()
+QRgb PaletteColour::getRGBA()
 {
-    return colour.rgb();
+    return colour.rgba();
 }

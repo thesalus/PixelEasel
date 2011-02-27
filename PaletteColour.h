@@ -8,7 +8,7 @@ class PaletteColour
 {
 public:
     PaletteColour(QColor);
-    QRgb getRGB();
+    QRgb getRGBA();
 private:
     QColor colour;
 };
