@@ -1,11 +1,11 @@
+#include "ActionsDialog.h"
 #include "PixelEasel.h"
 #include "ImagePreview.h"
 #include "ResizeDialog.h"
 #include <QFileDialog>
 #include <QDir>
+#include <QSettings>
 #include <QToolButton>
-#include <iostream>
-using namespace std;
 
 PixelEasel::PixelEasel(QWidget *parent) :
     QMainWindow(parent),
@@ -26,6 +26,7 @@ PixelEasel::PixelEasel(QWidget *parent) :
 
     setWindowTitle(tr("Pixel Easel"));
     resize(700, 500);
+    loadActions();
 }
 
 PixelEasel::~PixelEasel()
@@ -84,7 +85,7 @@ void PixelEasel::save()
     if (activeDocument()->hasFile())
     {
         activeDocument()->save();
-        saveAct->setEnabled(!undo_group->isClean());
+        save_action->setEnabled(!undo_group->isClean());
     }
 }
 
@@ -97,7 +98,7 @@ void PixelEasel::saveAs()
 	return;
     activeDocument()->setFileName(fileName);
     activeDocument()->save();
-    saveAct->setEnabled(!undo_group->isClean());
+    save_action->setEnabled(!undo_group->isClean());
 }
 
 void PixelEasel::cut()
@@ -190,66 +191,71 @@ void PixelEasel::about()
 
 void PixelEasel::createActions()
  {
-     newAct = new QAction(tr("&New..."), this);
-     newAct->setShortcut(QKeySequence::New);
-     connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
-     openAct = new QAction(tr("&Open..."), this);
-     openAct->setShortcut(QKeySequence::Open);
-     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-     saveAct = new QAction(tr("&Save..."), this);
-     saveAct->setShortcut(QKeySequence::Save);
-     saveAct->setEnabled(false);
-     connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
-     saveAsAct = new QAction(tr("Save As..."), this);
-     saveAsAct->setShortcut(QKeySequence::SaveAs);
-     saveAsAct->setEnabled(false);
-     connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-     exitAct = new QAction(tr("E&xit"), this);
-     exitAct->setShortcut(QKeySequence::Quit);
-     connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+     new_action = new QAction(tr("&New..."), this);
+     new_action->setShortcut(QKeySequence::New);
+     connect(new_action, SIGNAL(triggered()), this, SLOT(newFile()));
+     open_action = new QAction(tr("&Open..."), this);
+     open_action->setShortcut(QKeySequence::Open);
+     connect(open_action, SIGNAL(triggered()), this, SLOT(open()));
+     save_action = new QAction(tr("&Save..."), this);
+     save_action->setShortcut(QKeySequence::Save);
+     save_action->setEnabled(false);
+     connect(save_action, SIGNAL(triggered()), this, SLOT(save()));
+     save_as_action = new QAction(tr("Save As..."), this);
+     save_as_action->setShortcut(QKeySequence::SaveAs);
+     save_as_action->setEnabled(false);
+     connect(save_as_action, SIGNAL(triggered()), this, SLOT(saveAs()));
+     exit_action = new QAction(tr("E&xit"), this);
+     exit_action->setShortcut(QKeySequence::Quit);
+     connect(exit_action, SIGNAL(triggered()), this, SLOT(close()));
 
-     undoAct = undo_group->createUndoAction(this, tr("&Undo"));
-     undoAct->setShortcuts(QKeySequence::Undo);
-     redoAct = undo_group->createRedoAction(this, tr("&Redo"));
-     redoAct->setShortcuts(QKeySequence::Redo);
+     undo_action = undo_group->createUndoAction(this, tr("&Undo"));
+     undo_action->setShortcuts(QKeySequence::Undo);
+     redo_action = undo_group->createRedoAction(this, tr("&Redo"));
+     redo_action->setShortcuts(QKeySequence::Redo);
 
-     cutAct = new QAction(tr("Cu&t"), this);
-     cutAct->setShortcut(QKeySequence::Cut);
-     connect(cutAct, SIGNAL(triggered()), this, SLOT(cut()));
-     copyAct = new QAction(tr("&Copy"), this);
-     copyAct->setShortcut(QKeySequence::Copy);
-     connect(copyAct, SIGNAL(triggered()), this, SLOT(copy()));
-     pasteAct = new QAction(tr("&Paste"), this);
-     pasteAct->setShortcut(QKeySequence::Paste);
-     connect(pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
-     clearSelectionAct = new QAction(tr("C&lear Selection"), this);
-     clearSelectionAct->setShortcut(QKeySequence::Delete);
-     connect(clearSelectionAct, SIGNAL(triggered()), this, SLOT(clearSelection()));
+     cut_action = new QAction(tr("Cu&t"), this);
+     cut_action->setShortcut(QKeySequence::Cut);
+     connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
+     copy_action = new QAction(tr("&Copy"), this);
+     copy_action->setShortcut(QKeySequence::Copy);
+     connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
+     paste_action = new QAction(tr("&Paste"), this);
+     paste_action->setShortcut(QKeySequence::Paste);
+     connect(paste_action, SIGNAL(triggered()), this, SLOT(paste()));
+     clear_selection_action = new QAction(tr("C&lear Selection"), this);
+     clear_selection_action->setShortcut(QKeySequence::Delete);
+     connect(clear_selection_action, SIGNAL(triggered()), this, SLOT(clearSelection()));
 
-     selectAllAct = new QAction(tr("&Select All"), this);
-     selectAllAct->setShortcut(QKeySequence::SelectAll);
-     connect(selectAllAct, SIGNAL(triggered()), this, SLOT(selectAll()));
+     select_all_action = new QAction(tr("&Select All"), this);
+     select_all_action->setShortcut(QKeySequence::SelectAll);
+     connect(select_all_action, SIGNAL(triggered()), this, SLOT(selectAll()));
 
-     zoomInAct = new QAction(tr("Zoom &In (200x)"), this);
-     zoomInAct->setShortcut(QKeySequence::ZoomIn);
-     zoomInAct->setEnabled(false);
-     connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
-     zoomOutAct = new QAction(tr("Zoom &Out (50x)"), this);
-     zoomOutAct->setShortcut(QKeySequence::ZoomOut);
-     zoomOutAct->setEnabled(false);
-     connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
-     normalSizeAct = new QAction(tr("&Normal Size"), this);
-     normalSizeAct->setEnabled(false);
-     connect(normalSizeAct, SIGNAL(triggered()), this, SLOT(normalSize()));
+     edit_actions_action = new QAction(tr("&Edit Actions"), this);
+     connect(edit_actions_action, SIGNAL(triggered()), this, SLOT(editActions()));
+     save_actions_action = new QAction(tr("S&ave Actions"), this);
+     connect(save_actions_action, SIGNAL(triggered()), this, SLOT(saveActions()));
 
-     resizeAct = new QAction(tr("&Resize Image"), this);
-     resizeAct->setEnabled(false);
-     connect(resizeAct, SIGNAL(triggered()), this, SLOT(resizeImage()));
+     zoom_in_action = new QAction(tr("Zoom &In (200x)"), this);
+     zoom_in_action->setShortcut(QKeySequence::ZoomIn);
+     zoom_in_action->setEnabled(false);
+     connect(zoom_in_action, SIGNAL(triggered()), this, SLOT(zoomIn()));
+     zoom_out_action = new QAction(tr("Zoom &Out (50x)"), this);
+     zoom_out_action->setShortcut(QKeySequence::ZoomOut);
+     zoom_out_action->setEnabled(false);
+     connect(zoom_out_action, SIGNAL(triggered()), this, SLOT(zoomOut()));
+     normal_size_action = new QAction(tr("&Normal Size"), this);
+     normal_size_action->setEnabled(false);
+     connect(normal_size_action, SIGNAL(triggered()), this, SLOT(normalSize()));
 
-     aboutAct = new QAction(tr("&About"), this);
-     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
-     aboutQtAct = new QAction(tr("About &Qt"), this);
-     connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+     resize_action = new QAction(tr("&Resize Image"), this);
+     resize_action->setEnabled(false);
+     connect(resize_action, SIGNAL(triggered()), this, SLOT(resizeImage()));
+
+     about_action = new QAction(tr("&About"), this);
+     connect(about_action, SIGNAL(triggered()), this, SLOT(about()));
+     about_qt_action = new QAction(tr("About &Qt"), this);
+     connect(about_qt_action, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
  }
 
 void PixelEasel::createHotkeys()
@@ -264,39 +270,42 @@ void PixelEasel::createHotkeys()
 void PixelEasel::createMenus()
 {
      fileMenu = new QMenu(tr("&File"), this);
-     fileMenu->addAction(newAct);
-     fileMenu->addAction(openAct);
-     fileMenu->addAction(saveAct);
-     fileMenu->addAction(saveAsAct);
+     fileMenu->addAction(new_action);
+     fileMenu->addAction(open_action);
+     fileMenu->addAction(save_action);
+     fileMenu->addAction(save_as_action);
      fileMenu->addSeparator();
-     fileMenu->addAction(exitAct);
+     fileMenu->addAction(exit_action);
      menuBar()->addMenu(fileMenu);
 
      editMenu = new QMenu(tr("&Edit"), this);
-     editMenu->addAction(undoAct);
-     editMenu->addAction(redoAct);
+     editMenu->addAction(undo_action);
+     editMenu->addAction(redo_action);
      editMenu->addSeparator();
-     editMenu->addAction(cutAct);
-     editMenu->addAction(copyAct);
-     editMenu->addAction(pasteAct);
+     editMenu->addAction(cut_action);
+     editMenu->addAction(copy_action);
+     editMenu->addAction(paste_action);
      editMenu->addSeparator();
-     editMenu->addAction(clearSelectionAct);
-     editMenu->addAction(selectAllAct);
+     editMenu->addAction(clear_selection_action);
+     editMenu->addAction(select_all_action);
+     editMenu->addSeparator();
+     editMenu->addAction(edit_actions_action);
+     editMenu->addAction(save_actions_action);
      menuBar()->addMenu(editMenu);
 
      viewMenu = new QMenu(tr("&View"), this);
-     viewMenu->addAction(zoomInAct);
-     viewMenu->addAction(zoomOutAct);
-     viewMenu->addAction(normalSizeAct);
+     viewMenu->addAction(zoom_in_action);
+     viewMenu->addAction(zoom_out_action);
+     viewMenu->addAction(normal_size_action);
      menuBar()->addMenu(viewMenu);
 
      imageMenu = new QMenu(tr("&Image"), this);
-     imageMenu->addAction(resizeAct);
+     imageMenu->addAction(resize_action);
      menuBar()->addMenu(imageMenu);
 
      helpMenu = new QMenu(tr("&Help"), this);
-     helpMenu->addAction(aboutAct);
-     helpMenu->addAction(aboutQtAct);
+     helpMenu->addAction(about_action);
+     helpMenu->addAction(about_qt_action);
      menuBar()->addMenu(helpMenu);
 }
 
@@ -340,11 +349,11 @@ void PixelEasel::createUndoView()
 void PixelEasel::updateActions()
 {
     bool hasDocument = (this->activeDocument() != 0);
-    zoomInAct->setEnabled(hasDocument);
-    zoomOutAct->setEnabled(hasDocument);
-    resizeAct->setEnabled(hasDocument);
-    normalSizeAct->setEnabled(hasDocument); // check zoom levels
-    saveAsAct->setEnabled(hasDocument);
+    zoom_in_action->setEnabled(hasDocument);
+    zoom_out_action->setEnabled(hasDocument);
+    resize_action->setEnabled(hasDocument);
+    normal_size_action->setEnabled(hasDocument); // check zoom levels
+    save_as_action->setEnabled(hasDocument);
 
     updateEditActions(this->activeDocument()->hasSelection());
 }
@@ -361,9 +370,9 @@ void PixelEasel::updateEditActions(bool hasSelection)
     {
         hasSelection = false;
     }
-    clearSelectionAct->setEnabled(hasSelection);
-    cutAct->setEnabled(hasSelection);
-    copyAct->setEnabled(hasSelection);
+    clear_selection_action->setEnabled(hasSelection);
+    cut_action->setEnabled(hasSelection);
+    copy_action->setEnabled(hasSelection);
 }
 
 void PixelEasel::adjustScrollBar(QScrollBar *scroll_bar, double factor)
@@ -409,7 +418,7 @@ void PixelEasel::updateContext(QMdiSubWindow* window)
 
 void PixelEasel::updateSave(bool save_state)
 {
-    saveAct->setEnabled(!save_state && activeDocument()->hasFile());
+    save_action->setEnabled(!save_state && activeDocument()->hasFile());
 }
 
 void PixelEasel::closeEvent(QCloseEvent* e)
@@ -437,4 +446,64 @@ void PixelEasel::setColour(PaletteColour* colour)
 {
     if (activeDocument() != NULL)
         activeDocument()->setColour(colour);
+}
+
+void PixelEasel::loadActions()
+{
+    QSettings settings("trolltech.com", "Action");
+    settings.beginGroup("/Action");
+
+    QList<QAction*> actions = ((QObject*)this)->findChildren<QAction *>();
+
+    QListIterator<QAction*> i(actions);
+    QAction *action;
+
+    while (i.hasNext())
+    {
+        action = i.next();
+        if (!action->text().isEmpty()) {
+            QVariant shortcut = settings.value(action->text());
+            if (!shortcut.isNull())
+            {
+                action->setShortcut(QKeySequence(shortcut.toString()));
+            }
+        }
+    }
+}
+
+void PixelEasel::editActions()
+{
+    QList<QAction *> actions = ((QObject*)this)->findChildren<QAction *>();
+    QList<QAction *> list;
+    QListIterator<QAction*> i(actions);
+    QAction *action;
+    while (i.hasNext())
+    {
+        action = i.next();
+        if (!action->text().isEmpty()) {
+            list.push_back(action);
+        }
+    }
+    ActionsDialog actions_dialog(list, this);
+    actions_dialog.exec();
+}
+
+void PixelEasel::saveActions()
+{
+    QSettings settings("trolltech.com", "Action");
+    settings.beginGroup("/Action");
+
+    QList<QAction*> actions = ((QObject*)this)->findChildren<QAction *>();
+    QListIterator<QAction*> i(actions);
+    QAction *action;
+
+    while (i.hasNext())
+    {
+        action = i.next();
+        if (!action->shortcut().isEmpty())
+        {
+            QString shortcut = QString(action->shortcut());
+            settings.setValue(action->text(), shortcut);
+        }
+    }
 }

@@ -44,6 +44,9 @@ private slots:
     void resizeImage();
     void about();
 
+    void editActions();
+    void saveActions();
+
     void updateActions();
     void updateEditActions(bool);
     void updateContext(QMdiSubWindow*);
@@ -63,6 +66,8 @@ private:
     ImageDocument *activeDocument();
     void closeEvent(QCloseEvent* e);
 
+    void loadActions();
+
     QMdiArea        *mdi_area;
     QUndoView       *undo_view;
     QClipboard      *clipboard;
@@ -77,30 +82,33 @@ private:
     PaletteWidget   *palette_view;
     HotkeyBar       *hotkeys;
 
-    QAction *newAct;
-    QAction *openAct;
-    QAction *saveAct;
-    QAction *saveAsAct;
-    QAction *exitAct;
+    QAction *new_action;
+    QAction *open_action;
+    QAction *save_action;
+    QAction *save_as_action;
+    QAction *exit_action;
 
-    QAction *copyAct;
-    QAction *cutAct;
-    QAction *pasteAct;
+    QAction *copy_action;
+    QAction *cut_action;
+    QAction *paste_action;
 
-    QAction *clearSelectionAct;
-    QAction *selectAllAct;
+    QAction *clear_selection_action;
+    QAction *select_all_action;
 
-    QAction *zoomInAct;
-    QAction *zoomOutAct;
-    QAction *normalSizeAct;
+    QAction *zoom_in_action;
+    QAction *zoom_out_action;
+    QAction *normal_size_action;
 
-    QAction *undoAct;
-    QAction *redoAct;
+    QAction *undo_action;
+    QAction *redo_action;
 
-    QAction *resizeAct;
+    QAction *resize_action;
 
-    QAction *aboutAct;
-    QAction *aboutQtAct;
+    QAction *about_action;
+    QAction *about_qt_action;
+
+    QAction *edit_actions_action;
+    QAction *save_actions_action;
 
     QMenu *fileMenu;
     QMenu *editMenu;

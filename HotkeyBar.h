@@ -4,22 +4,24 @@
 #include "Tools/Tool.h"
 
 #include <QSignalMapper>
+#include <QActionGroup>
 #include <QToolBar>
-#include <QToolButton>
 
 class HotkeyBar : public QToolBar
 {
     Q_OBJECT
     unsigned int    max_hotkeys;
     Tool::ToolTypes selection;
-    QToolButton*   *buttons;   // do we need to customize these too? drag+drop...
+    QActionGroup    tools;   // do we need to customize these too? drag+drop...
     QSignalMapper  *mapper;
 
-    void createButtons();
+    void createActions();
+    void createAction(QIcon icon, QString text, QKeySequence shortcut, Tool::ToolTypes type);
 public:
     explicit HotkeyBar(QWidget *parent = 0, unsigned int max_keys = 2);
     ~HotkeyBar();
     Tool::ToolTypes getToolType();
+    QList<QAction*> getActions();
 
 signals:
 
