@@ -1,7 +1,13 @@
 #include "Palette.h"
+#include <QtAlgorithms>
 
 Palette::Palette()
 {
+}
+
+Palette::~Palette()
+{
+    qDeleteAll(colours);
 }
 
 QVector<PaletteColour*>* Palette::getColours()

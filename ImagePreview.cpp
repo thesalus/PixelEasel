@@ -25,20 +25,22 @@ void ImagePreview::setTool(Tool::ToolTypes)
 void ImagePreview::refreshImage(const QImage& image)
 {
     QImage  new_image = ((Layer) image.copy()).layOver(background->copy());
+    int preview_width = 70;
+    int preview_height = 70;
     int width = new_image.width();
     int height = new_image.height();
-    if (width > 70) {
+    if (width > preview_width) {
         if (height > width)
         {
-            width = 70*width/height;
-            height = 70;
+            width = preview_width*width/height;
+            height = preview_height;
         } else {
-            height = 70*height/width;
-            width = 70;
+            height = preview_height*height/width;
+            width = preview_width;
         }
-    } else if (height > 70) {
-        width = 70*width/height;
-        height = 70;
+    } else if (height > preview_height) {
+        width = preview_width*width/height;
+        height = preview_height;
     }
     this->setPixmap(QPixmap::fromImage(new_image.scaled(width, height)));
     this->repaint();

@@ -43,6 +43,17 @@ void HotkeyBar::createButtons()
     buttons[2]->setIcon(QIcon("select.png"));
     buttons[2]->setText(QString("Selection"));
     mapper->setMapping(buttons[2], (int) Tool::SelectTool);
+
+    buttons[3] = new QToolButton;
+    buttons[3]->setIcon(QIcon("dropper.png"));
+    buttons[3]->setText(QString("Eye Drop"));
+    mapper->setMapping(buttons[3], (int) Tool::EyedropTool);
+}
+
+HotkeyBar::~HotkeyBar()
+{
+    delete mapper;
+    delete [] buttons;
 }
 
 void HotkeyBar::setTool(int new_selection)

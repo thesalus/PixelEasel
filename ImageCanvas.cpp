@@ -1,5 +1,6 @@
 #include "ImageCanvas.h"
 #include "ImageDocument.h"
+#include "Tools/EyedropTool.h"
 #include "Tools/PenTool.h"
 #include "Tools/LineTool.h"
 #include "Tools/SelectTool.h"
@@ -112,6 +113,9 @@ void ImageCanvas::setTool(Tool::ToolTypes type)
         break;
     case Tool::SelectTool :
         currentTool = new SelectTool(this);
+        break;
+    case Tool::EyedropTool :
+        currentTool = new EyedropTool(document_m);
         break;
     }
 }

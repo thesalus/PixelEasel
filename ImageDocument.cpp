@@ -14,6 +14,7 @@ ImageDocument::ImageDocument(QSize size)
         image_index(0),
 	scratchpad(size, QImage::Format_ARGB32),
         undo_stack(NULL),
+        preview(NULL),
         palette(new Palette)
 {
     // create a transparent background
@@ -33,6 +34,7 @@ ImageDocument::ImageDocument(QString new_file_name)
         image_index(0),
 	scratchpad(QSize(1,1), QImage::Format_ARGB32),
         undo_stack(NULL),
+        preview(NULL),
         palette(new Palette)
 {
     QImage image(file_name);
@@ -84,7 +86,7 @@ void ImageDocument::initialize()
             for (int y = 0; y < image->height(); y++) {
                 QRgb key = image->pixel(x,y);
                 if (key != Qt::transparent && colour_hash.value(key, 0) == 0) {
-                    colourTable.push_back(key);
+                    colour_table.push_back(key);
                     colour_hash[key] = 1;
                     palette->addColour(key);
                 }
@@ -92,7 +94,7 @@ void ImageDocument::initialize()
         }
     }
     for (int i = 0; i < image_layers.size(); ++i) {
-        image_layers.at(i)->setColorTable(colourTable);
+        image_layers.at(i)->setColorTable(colour_table);
     }
 
     preview = new ImagePreview(this);
@@ -109,6 +111,8 @@ void ImageDocument::initialize()
 ImageDocument::~ImageDocument()
 {
     delete undo_stack;
+    delete palette;
+    delete preview;
     delete scroll_area;
 }
 
@@ -159,6 +163,11 @@ Palette* ImageDocument::getPalette()
 QString ImageDocument::getPath()
 {
     return file_name;
+}
+
+QRgb ImageDocument::getPixel(QPoint point)
+{
+    return image_layers.at(image_index)->pixel(point);
 }
 
 ImagePreview* ImageDocument::getPreview()
@@ -328,20 +337,24 @@ void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
     views.first()->setTool(type);
 }
 
+void ImageDocument::setColour(QRgb colour)
+{
+    myPenColor = colour;
+    myPen.setColor(myPenColor);
+    if (colour_table.indexOf(colour) == -1) {
+        colour_table.push_back(colour);
+        for (int i = 0; i < image_layers.size(); ++i) {
+            image_layers.at(i)->setColorTable(colour_table);
+        }
+        palette->addColour(colour);
+    }
+}
+
 void ImageDocument::setColour(PaletteColour* colour)
 {
     // TODO: add if it does not exist in the colour table?
     //          then tell the PaletteWidget so that it may add it.
-    QRgb rgb = colour->getRGBA();
-    myPenColor = rgb;
-    myPen.setColor(myPenColor);
-    if (colourTable.indexOf(rgb) == -1) {
-        colourTable.push_back(rgb);
-        for (int i = 0; i < image_layers.size(); ++i) {
-            image_layers.at(i)->setColorTable(colourTable);
-        }
-        palette->addColour(rgb);
-    }
+    setColour(colour->getRGBA());
 }
 
 bool ImageDocument::hasSelection()

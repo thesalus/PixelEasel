@@ -18,7 +18,8 @@ SOURCES += main.cpp \
     Tools/LineTool.cpp \
     Tools/PenTool.cpp \
     Tools/SelectTool.cpp \
-    FlowLayout.cpp
+    FlowLayout.cpp \
+    Tools/EyedropTool.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
@@ -32,7 +33,8 @@ HEADERS += PixelEasel.h \
     PaletteColour.h \
     PaletteWidget.h \
     PaletteColourWidget.h \
-    FlowLayout.h
+    FlowLayout.h \
+    Tools/EyedropTool.h
 HEADERS += Layers/Layer.h \
     Layers/BackgroundLayer.h \
     Layers/SolidBackgroundLayer.h

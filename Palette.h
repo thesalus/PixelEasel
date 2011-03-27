@@ -9,6 +9,7 @@ class Palette
 {
 public:
     Palette();
+    ~Palette();
     void addColour(QRgb);
     QVector<PaletteColour*>*    getColours();
 

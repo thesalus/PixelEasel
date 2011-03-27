@@ -37,21 +37,23 @@ public:
 
     void closeEvent(QCloseEvent* event);
 
-    QImage*	    getImage();
+    QImage*         getImage();
     Palette*        getPalette();
-    QString	    getPath();
-    QSize	    getSize();
+    QString         getPath();
+    QRgb            getPixel(QPoint);
+    QSize           getSize();
     QUndoStack*     getUndoStack();
     ImagePreview*   getPreview();
 
     void            setSelection(QRect rect);
-    void	    setSize(QSize new_size);
-    void	    setUndoStack(QUndoStack* new_undo_stack);
+    void            setSize(QSize new_size);
+    void            setUndoStack(QUndoStack* new_undo_stack);
 
     bool            hasFile();
     bool            hasSelection();
     void            setToolInActiveView(Tool::ToolTypes);
     void            setColour(PaletteColour*);
+    void            setColour(QRgb colour);
     void            translateSelection(QPoint point);
     void            selectToScratchpad();
 
@@ -79,13 +81,13 @@ private:
     QVector<Layer*> image_layers;
     Layer	    scratchpad;
     QVector<ImageView*>	views;
-    QScrollArea*    scroll_area;
-    QUndoStack*	    undo_stack;
+    QScrollArea    *scroll_area;
+    QUndoStack     *undo_stack;
     QImage          preScratch;
     QPoint          scratchpad_translation;
-    ImagePreview*   preview;
-    Palette*        palette;
-    QVector<QRgb>   colourTable;
+    ImagePreview   *preview;
+    Palette        *palette;
+    QVector<QRgb>   colour_table;
 
     QPen            myPen;
     int		    myPenWidth;

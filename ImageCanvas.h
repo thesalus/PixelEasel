@@ -47,8 +47,8 @@ private:
 
     double	    scaleFactor;
 
-    Tool	  * currentTool;
-    QRubberBand   * rubberBand;
+    Tool	   *currentTool;
+    QRubberBand    *rubberBand;
     QRect           mySelection;
 };
 

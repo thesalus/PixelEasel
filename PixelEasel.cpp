@@ -153,12 +153,12 @@ void PixelEasel::selectAll()
 
 void PixelEasel::zoomIn()
 {
-    activeDocument()->scaleImage(1.25);
+    activeDocument()->scaleImage(2);
 }
 
 void PixelEasel::zoomOut()
 {
-    activeDocument()->scaleImage(0.8);
+    activeDocument()->scaleImage(0.5);
 }
 
 void PixelEasel::normalSize()
@@ -169,9 +169,9 @@ void PixelEasel::normalSize()
 void PixelEasel::resizeImage()
 {
     ResizeDialog* rd = new ResizeDialog(activeDocument()->getSize(), this);
-    rd->setModal(true);
-    rd->exec();
-    rd->activateWindow();
+        rd->setModal(true);
+        rd->exec();
+        rd->activateWindow();
     QSize size = rd->getSize();
     if (activeDocument() != NULL && size.isValid() && size != activeDocument()->getSize())
 	activeDocument()->setSize(size);
@@ -230,11 +230,11 @@ void PixelEasel::createActions()
      selectAllAct->setShortcut(QKeySequence::SelectAll);
      connect(selectAllAct, SIGNAL(triggered()), this, SLOT(selectAll()));
 
-     zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
+     zoomInAct = new QAction(tr("Zoom &In (200x)"), this);
      zoomInAct->setShortcut(QKeySequence::ZoomIn);
      zoomInAct->setEnabled(false);
      connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
-     zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
+     zoomOutAct = new QAction(tr("Zoom &Out (50x)"), this);
      zoomOutAct->setShortcut(QKeySequence::ZoomOut);
      zoomOutAct->setEnabled(false);
      connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
@@ -254,10 +254,10 @@ void PixelEasel::createActions()
 
 void PixelEasel::createHotkeys()
 {
-    hotkeys = new HotkeyBar(this, 3);
+    hotkeys = new HotkeyBar(this, 4);
 
     hotkeys->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
-    addToolBar(Qt::BottomToolBarArea, hotkeys);
+    addToolBar(Qt::TopToolBarArea, hotkeys);
     // TODO: should we only show this if there is an active document?
 }
 
@@ -315,8 +315,8 @@ void PixelEasel::createDocks()
     history_dock->setWidget(undo_view);
 
     palette_dock = new QDockWidget(tr("Palette"), this);
-    palette_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, palette_dock);
+    palette_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+    addDockWidget(Qt::BottomDockWidgetArea, palette_dock);
     palette_view = new PaletteWidget(this);
     connect(palette_view,   SIGNAL(selectedColour(PaletteColour*)),
             this,           SLOT(setColour(PaletteColour*)));
@@ -393,7 +393,8 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
 
 void PixelEasel::updateContext(QMdiSubWindow* window)
 {
-    if (window != 0 && old_window != window) {
+    if (window != 0 && old_window != window)
+    {
         old_window = window;    // avoid repeated, unnecessary updates
         ImageDocument* document = (ImageDocument*) window;
         undo_group->setActiveStack(document->getUndoStack());
