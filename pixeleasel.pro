@@ -5,7 +5,7 @@ TARGET = pixeleasel
 TEMPLATE = app
 SOURCES += main.cpp \
     ImageView.cpp \
-    HotkeyBar.cpp \
+    Widgets/HotkeyBar.cpp \
     ImagePreview.cpp \
     Palette.cpp \
     PaletteColour.cpp \
@@ -20,7 +20,8 @@ SOURCES += main.cpp \
     Tools/SelectTool.cpp \
     FlowLayout.cpp \
     Tools/EyedropTool.cpp \
-    ActionsDialog.cpp
+    ActionsDialog.cpp \
+    Widgets/ZoomWidget.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
@@ -28,7 +29,7 @@ SOURCES += ImageCanvas.cpp
 SOURCES += ImageDocument.cpp
 HEADERS += PixelEasel.h \
     ImageView.h \
-    HotkeyBar.h \
+    Widgets/HotkeyBar.h \
     ImagePreview.h \
     Palette.h \
     PaletteColour.h \
@@ -36,7 +37,8 @@ HEADERS += PixelEasel.h \
     PaletteColourWidget.h \
     FlowLayout.h \
     Tools/EyedropTool.h \
-    ActionsDialog.h
+    ActionsDialog.h \
+    Widgets/ZoomWidget.h
 HEADERS += Layers/Layer.h \
     Layers/BackgroundLayer.h \
     Layers/SolidBackgroundLayer.h

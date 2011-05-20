@@ -6,14 +6,17 @@
 #include "Tools/SelectTool.h"
 #include "Layers/SolidBackgroundLayer.h"
 
+int ImageCanvas::default_scale_factor = 3;
+double ImageCanvas::scale_factors[] = {10, 25, 50, 100, 200, 400, 800, 1600};
+QString ImageCanvas::scale_factor_strings[] = {"10%","25%","50%","100%","200%","400%","800%","1600%"};
+
 ImageCanvas::ImageCanvas(ImageDocument* document) :
     ImageView(document),
     background(new SolidBackgroundLayer(document_m->getSize(), Qt::green)),
+    m_scale(default_scale_factor),
     rubberBand(0)
 {
     this->setBackgroundRole(QPalette::Base);
-
-    scaleFactor = 1.0;
     currentTool = new PenTool(document_m);
 }
 
@@ -29,31 +32,30 @@ ImageCanvas::~ImageCanvas()
  */
 void ImageCanvas::resetScale()
 {
-    this->setScale(1.0);
+    this->setScale(default_scale_factor);
 }
 
-void ImageCanvas::setScale(double new_factor)
+int ImageCanvas::getScale()
 {
-    scaleFactor = new_factor;;
-    //  TODO: Need to find a way to pass this up to the main window, or set it as an internal state that the main window polls
-    //  zoomInAct->setEnabled(scaleFactor < 3.0);
-    //  zoomOutAct->setEnabled(scaleFactor > 0.333);
+    return m_scale;
+}
+
+void ImageCanvas::setScale(int new_factor)
+{
+    if (new_factor > 7)
+        new_factor = 7;
+    else if (new_factor < 0)
+        new_factor = 0;
+    m_scale = new_factor;
     QImage* new_image = document_m->getImage();
     this->refreshImage(*new_image);
+    // TODO: we need to scale the rubberBand
     delete new_image;
-}
-
-// don't need to let users scale by a constant factor
-void ImageCanvas::scaleImage(double factor)
-{
-     Q_ASSERT(this->pixmap());
-     this->setScale(scaleFactor*factor);
-     // we need to scale the rubberBand
 }
 
 void ImageCanvas::refreshImage(const QImage& image)
 {
-    QSize new_size = image.size()*scaleFactor;
+    QSize new_size = image.size()*scale_factors[m_scale]/100;
 
     if (image.size() != background->size())
     {
@@ -71,7 +73,7 @@ void ImageCanvas::refreshImage(const QImage& image)
 QPoint ImageCanvas::normalizePoint(QPoint point)
 {
     // I suspect this may be slightly slow.
-    return (point-QPoint(scaleFactor, scaleFactor)/2)/scaleFactor;
+    return (point-QPoint(scale_factors[m_scale]/100.0, scale_factors[m_scale]/100.0)/2)*100.0/scale_factors[m_scale];
 }
 
 void ImageCanvas::mousePressEvent(QMouseEvent *event)
@@ -127,7 +129,8 @@ void ImageCanvas::setSelectBox(QRect rect)
         rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     }
     mySelection = rect;
-    rubberBand->setGeometry(QRect(rect.topLeft()*scaleFactor, rect.size()*scaleFactor));
+    rubberBand->setGeometry(QRect(rect.topLeft()*scale_factors[m_scale]/100,
+                                  rect.size()*scale_factors[m_scale]/100));
     rubberBand->show();
     emit selectionModified();
 }

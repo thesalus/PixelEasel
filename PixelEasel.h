@@ -17,7 +17,8 @@
 #include <QToolBox>
 #include <QUndoView>
 #include "ImageDocument.h"
-#include "HotkeyBar.h"
+#include "Widgets/HotkeyBar.h"
+#include "Widgets/ZoomWidget.h"
 #include "PaletteWidget.h"
 #include "PaletteColour.h"
 #include <QDockWidget>
@@ -55,6 +56,8 @@ private slots:
     void setTool(int);
     void setColour(PaletteColour*);
 
+    void zoomChanged(int);
+
 private:
     void createUndoView();
     void createActions();
@@ -77,6 +80,8 @@ private:
     QDockWidget     *palette_dock;
     QDockWidget     *preview_dock;
     QUndoGroup      *undo_group;
+    QDockWidget     *view_dock;
+    ZoomWidget      *zoom_widget;
 
     QMdiSubWindow   *old_window;
     PaletteWidget   *palette_view;

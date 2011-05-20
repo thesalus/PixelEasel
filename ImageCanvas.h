@@ -14,9 +14,11 @@ class ImageCanvas : public ImageView
 {
     Q_OBJECT
 public:
+    static int default_scale_factor;
+    static QString  scale_factor_strings[];
+
     ImageCanvas(ImageDocument *document);
     ~ImageCanvas();
-    void scaleImage(double factor);
     void resetScale();
 
     void setSelectBox(QRect rect);
@@ -26,6 +28,9 @@ public:
     void showSelection(bool show);
     QRect getSelection();
     void translateSelection(QPoint);
+    void setScale(int factor);
+
+    int  getScale();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -39,13 +44,13 @@ signals:
     void selectionModified();
 
 private:
-    void setScale(double factor);
     QPoint normalizePoint(QPoint point);
     void resizeImage(QImage *image, const QSize &newSize);
 
     BackgroundLayer*background;
 
-    double	    scaleFactor;
+    static double   scale_factors[];
+    int             m_scale;
 
     Tool	   *currentTool;
     QRubberBand    *rubberBand;

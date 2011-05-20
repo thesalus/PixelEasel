@@ -4,12 +4,12 @@
 #include <QDir>
 #include <QHash>
 
-int ImageDocument::untitled_counter = 0;
+int ImageDocument::c_untitled_documents = 0;
 
 ImageDocument::ImageDocument(QSize size)
-    :	file_name("Untitled"+(untitled_counter > 0 ? " "+QString::number(untitled_counter+1) : "")),
-        has_file_flag(false),
-        selection_changed_flag(false),
+    :	file_name("Untitled"+(c_untitled_documents > 0 ? " "+QString::number(c_untitled_documents+1) : "")),
+        f_has_file(false),
+        f_selection_changed(false),
         emptyScratchpadSelection(true),
         image_index(0),
 	scratchpad(size, QImage::Format_ARGB32),
@@ -22,14 +22,14 @@ ImageDocument::ImageDocument(QSize size)
         image.fill(qRgba(0, 0, 0, 0));
         image_layers << (new Layer(image));
     this->setAttribute(Qt::WA_DeleteOnClose, true);
-    untitled_counter++;
+    c_untitled_documents++;
     initialize();
 }
 
 ImageDocument::ImageDocument(QString new_file_name)
     :	file_name(new_file_name),
-        has_file_flag(true),
-        selection_changed_flag(false),
+        f_has_file(true),
+        f_selection_changed(false),
         emptyScratchpadSelection(true),
         image_index(0),
 	scratchpad(QSize(1,1), QImage::Format_ARGB32),
@@ -73,9 +73,9 @@ void ImageDocument::initialize()
     scroll_area->setStyleSheet("QLabel { background-color: #999999 }");
     scroll_area->setWidget(canvas);
 
-    myPenWidth = 1;
-    myPenColor = Qt::black;
-    myPen = QPen(myPenColor, myPenWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    m_pen_width = 1;
+    m_pen_colour = Qt::black;
+    m_pen = QPen(m_pen_colour, m_pen_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 
     // grab all the colours from each layer and put it in the palette
     // TODO: make the list unique
@@ -116,12 +116,6 @@ ImageDocument::~ImageDocument()
     delete scroll_area;
 }
 
-void ImageDocument::scaleImage(double scale_factor)
-{
-    // TODO: how do we do this part? separate subwindow?
-    ((ImageCanvas*) views.first())->scaleImage(scale_factor);
-}
-
 void ImageDocument::resetScale()
 {
     ((ImageCanvas*) views.first())->resetScale();
@@ -130,7 +124,7 @@ void ImageDocument::resetScale()
 void ImageDocument::save()
 {
     // Expand this to include other file types
-    // TODO: do we need to make use of has_file_flag
+    // TODO: do we need to make use of f_has_file
     if (this->getImage()->save(file_name, "PNG"))
     {
         if (undo_stack != NULL && !undo_stack->isClean())
@@ -204,7 +198,7 @@ void ImageDocument::drawLines(QVector<QPoint> point_pairs)
 {
     QImage old_image = image_layers.at(image_index)->copy();
     QPainter painter(image_layers.at(image_index));
-        painter.setPen(myPen);
+        painter.setPen(m_pen);
         painter.drawLines(point_pairs);
 	painter.end();
     if (undo_stack != NULL)
@@ -225,7 +219,7 @@ void ImageDocument::refreshScratchpad() {
 void ImageDocument::scratchLine(QPoint start_point, QPoint end_point)
 {
     QPainter painter(&scratchpad);
-        painter.setPen(myPen);
+        painter.setPen(m_pen);
         painter.drawLine(start_point, end_point);
 	painter.end();
     //    int rad = (pen.width() / 2) + 2;
@@ -250,7 +244,7 @@ void ImageDocument::updateTitle(bool state)
 void ImageDocument::setFileName(QString file)
 {
     file_name = file;
-    has_file_flag = true;
+    f_has_file = true;
     makeChange();
     // TODO: we're duplicating the makechange call here when saving as...
 }
@@ -291,7 +285,7 @@ void ImageDocument::closeEvent(QCloseEvent* event)
         {
             case 0:
                 // if there is no filename, then query the user for one
-                if (!has_file_flag)
+                if (!f_has_file)
                 {
                     QString new_file_name = QFileDialog::getSaveFileName(this, tr("Save As"),
                                                     QDir::currentPath(),
@@ -323,7 +317,7 @@ void ImageDocument::closeEvent(QCloseEvent* event)
 
 bool ImageDocument::hasFile()
 {
-    return has_file_flag;
+    return f_has_file;
 }
 
 void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
@@ -337,10 +331,20 @@ void ImageDocument::setToolInActiveView(Tool::ToolTypes type)
     views.first()->setTool(type);
 }
 
+int ImageDocument::getZoomInActiveView()
+{
+    return ((ImageCanvas*) views.first())->getScale();
+}
+
+void ImageDocument::setZoomInActiveView(int scale)
+{
+    ((ImageCanvas*) views.first())->setScale(scale);
+}
+
 void ImageDocument::setColour(QRgb colour)
 {
-    myPenColor = colour;
-    myPen.setColor(myPenColor);
+    m_pen_colour = colour;
+    m_pen.setColor(m_pen_colour);
     if (colour_table.indexOf(colour) == -1) {
         colour_table.push_back(colour);
         for (int i = 0; i < image_layers.size(); ++i) {
@@ -435,14 +439,14 @@ void ImageDocument::clearSelection()
 void ImageDocument::setSelection(QRect rect)
 {
     views.first()->setSelectBox(rect);
-    selection_changed_flag = true;
+    f_selection_changed = true;
     emit makeChange();
 }
 
 void ImageDocument::passSelectionModified()
 {
     // merge the selected image back onto the original if it was changed
-    if (selection_changed_flag)
+    if (f_selection_changed)
     {
         QPainter painter(image_layers.at(image_index));
             painter.drawImage(scratchpad_translation, scratchpad);
@@ -455,7 +459,7 @@ void ImageDocument::passSelectionModified()
             undo_stack->push(command);
         }
         // TODO: don't put this on the stack if we cancel
-        selection_changed_flag = false;
+        f_selection_changed = false;
         emptyScratchpadSelection = true;
         scratchpad_translation = QPoint(0,0);
     }
@@ -479,7 +483,7 @@ void ImageDocument::selectToScratchpad()
         painter.drawImage(rect.topLeft(), moved);
         painter.end();
     emptyScratchpadSelection = false;
-    selection_changed_flag = true;
+    f_selection_changed = true;
     emit makeChange();
 }
 

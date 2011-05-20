@@ -22,7 +22,6 @@ public:
     ImageDocument(QSize);
     ~ImageDocument();
 
-    void scaleImage(double scale_factor);
     void resetScale();
 // Permanent Actions
     void replaceImage(QImage new_image);
@@ -44,6 +43,7 @@ public:
     QSize           getSize();
     QUndoStack*     getUndoStack();
     ImagePreview*   getPreview();
+    int             getZoomInActiveView();
 
     void            setSelection(QRect rect);
     void            setSize(QSize new_size);
@@ -52,6 +52,7 @@ public:
     bool            hasFile();
     bool            hasSelection();
     void            setToolInActiveView(Tool::ToolTypes);
+    void            setZoomInActiveView(int);
     void            setColour(PaletteColour*);
     void            setColour(QRgb colour);
     void            translateSelection(QPoint point);
@@ -72,10 +73,11 @@ signals:
     bool selectionModified(bool);
 
 private:
-    static int	    untitled_counter;       // tracks the number that will be appended to new unnamed documents
+    static int	    c_untitled_documents;       // tracks the number that will be appended to new unnamed documents
+
     QString	    file_name;
-    bool            has_file_flag;
-    bool            selection_changed_flag;
+    bool            f_has_file;
+    bool            f_selection_changed;
     bool            emptyScratchpadSelection;
     int		    image_index;
     QVector<Layer*> image_layers;
@@ -89,13 +91,12 @@ private:
     Palette        *palette;
     QVector<QRgb>   colour_table;
 
-    QPen            myPen;
-    int		    myPenWidth;
-    QColor	    myPenColor;
+    QPen            m_pen;
+    int		    m_pen_width;
+    QColor	    m_pen_colour;
 
     void            clearRect(QRect rect);
-    void	    makeChange();
-		    // make change, and refresh image
+    void	    makeChange();   // make change, and refresh image
     void	    initialize();
 };
 
