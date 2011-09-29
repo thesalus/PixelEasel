@@ -7,7 +7,7 @@
 
 HotkeyBar::HotkeyBar(QWidget *parent, unsigned int max_keys) :
     QToolBar("Hotkeys", parent),
-    max_hotkeys(max_keys),
+    maxHotkeys(max_keys),
     selection(Tool::PenTool),
     tools(this),
     mapper(new QSignalMapper(this))
@@ -56,8 +56,7 @@ void HotkeyBar::createAction(QIcon icon, QString text, QKeySequence shortcut, To
 void HotkeyBar::setTool(int new_selection)
 {
     QAction *action;
-    if ((action = (QAction*)mapper->mapping(new_selection)) != NULL)
-    {
+    if ((action = (QAction*)mapper->mapping(new_selection)) != NULL) {
         action->setChecked(true);
         selection = (Tool::ToolTypes) new_selection;
     }

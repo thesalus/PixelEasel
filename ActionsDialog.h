@@ -19,11 +19,11 @@ protected slots:
 
 
 private slots:
-    void recordAction(int row, int column);
+    void recordAction  (int row, int column);
     void validateAction(int row, int column);
 
 private:
-    QString          old_shortcut;
+    QString          oldShortcut;
     QTableWidget    *actionsTable;
     QList<QAction*>  actionsList;
 

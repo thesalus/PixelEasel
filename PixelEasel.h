@@ -19,7 +19,7 @@
 #include "ImageDocument.h"
 #include "Widgets/HotkeyBar.h"
 #include "Widgets/ZoomWidget.h"
-#include "PaletteWidget.h"
+#include "Widgets/PaletteWidget.h"
 #include "PaletteColour.h"
 #include <QDockWidget>
 
@@ -71,49 +71,49 @@ private:
 
     void loadActions();
 
-    QMdiArea        *mdi_area;
-    QUndoView       *undo_view;
+    QMdiArea        *mdiArea;
+    QUndoView       *undoView;
     QClipboard      *clipboard;
 
     QStackedWidget  *previews;
-    QDockWidget     *history_dock;
-    QDockWidget     *palette_dock;
-    QDockWidget     *preview_dock;
-    QUndoGroup      *undo_group;
-    QDockWidget     *view_dock;
-    ZoomWidget      *zoom_widget;
+    QDockWidget     *historyDock;
+    QDockWidget     *paletteDock;
+    QDockWidget     *previewDock;
+    QUndoGroup      *undoGroup;
+    QDockWidget     *viewDock;
+    ZoomWidget      *zoomWidget;
 
-    QMdiSubWindow   *old_window;
-    PaletteWidget   *palette_view;
+    QMdiSubWindow   *oldWindow;
+    PaletteWidget   *paletteView;
     HotkeyBar       *hotkeys;
 
-    QAction *new_action;
-    QAction *open_action;
-    QAction *save_action;
-    QAction *save_as_action;
-    QAction *exit_action;
+    QAction *newAction;
+    QAction *openAction;
+    QAction *saveAction;
+    QAction *saveAsAction;
+    QAction *exitAction;
 
-    QAction *copy_action;
-    QAction *cut_action;
-    QAction *paste_action;
+    QAction *copyAction;
+    QAction *cutAction;
+    QAction *pasteAction;
 
-    QAction *clear_selection_action;
-    QAction *select_all_action;
+    QAction *clearSelectionAction;
+    QAction *selectAllAction;
 
-    QAction *zoom_in_action;
-    QAction *zoom_out_action;
-    QAction *normal_size_action;
+    QAction *zoomInAction;
+    QAction *zoomOutAction;
+    QAction *normalSizeAction;
 
-    QAction *undo_action;
-    QAction *redo_action;
+    QAction *undoAction;
+    QAction *redoAction;
 
-    QAction *resize_action;
+    QAction *resizeAction;
 
-    QAction *about_action;
-    QAction *about_qt_action;
+    QAction *aboutAction;
+    QAction *aboutQtAction;
 
-    QAction *edit_actions_action;
-    QAction *save_actions_action;
+    QAction *editActionsAction;
+    QAction *saveActionsAction;
 
     QMenu *fileMenu;
     QMenu *editMenu;

@@ -11,13 +11,13 @@ PixelEasel::PixelEasel(QWidget *parent) :
     QMainWindow(parent),
     clipboard(QApplication::clipboard())
 {
-    undo_group = new QUndoGroup;
+    undoGroup = new QUndoGroup;
 
-    mdi_area = new QMdiArea;
-    mdi_area->setBackgroundRole(QPalette::Dark);
-    mdi_area->setViewMode(QMdiArea::TabbedView);
+    mdiArea = new QMdiArea;
+    mdiArea->setBackgroundRole(QPalette::Dark);
+    mdiArea->setViewMode(QMdiArea::TabbedView);
     // TODO: find a way to add an X to close tabs.
-    setCentralWidget(mdi_area);
+    setCentralWidget(mdiArea);
 
     createActions();
     createHotkeys();
@@ -39,14 +39,14 @@ void PixelEasel::newFile()
     ResizeDialog* rd = new ResizeDialog(QSize(64,64), this);
         rd->setModal(true);
     QSize size;
-    while (!size.isValid())
-    {
+    while (!size.isValid()) {
 	rd->exec();
 	rd->activateWindow();
 	size = rd->getSize();
     }
-    if (activeDocument() != NULL && size != activeDocument()->getSize())
+    if (activeDocument() != NULL && size != activeDocument()->getSize()) {
 	activeDocument()->setSize(size);
+    }
     ImageDocument* imageDocument = new ImageDocument(size);
     setupContext(imageDocument);
     imageDocument->showMaximized();
@@ -59,9 +59,8 @@ void PixelEasel::open()
                                       QDir::currentPath(),
                                       tr("Images (*.png *.gif)"));
     QString fileName = fd->getOpenFileName();
-    if (!fileName.isEmpty())
-    {
-        QList<QMdiSubWindow*> list = mdi_area->subWindowList();
+    if (!fileName.isEmpty()) {
+        QList<QMdiSubWindow*> list = mdiArea->subWindowList();
 	ImageDocument* imageDocument = NULL;
 
         // ensure uniqueness
@@ -82,10 +81,9 @@ void PixelEasel::open()
       
 void PixelEasel::save()
 {
-    if (activeDocument()->hasFile())
-    {
+    if (activeDocument()->hasFile()) {
         activeDocument()->save();
-        save_action->setEnabled(!undo_group->isClean());
+        saveAction->setEnabled(!undoGroup->isClean());
     }
 }
 
@@ -94,35 +92,37 @@ void PixelEasel::saveAs()
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
 				    QDir::currentPath(),
 				    tr("Images (*.png *.gif)"));
-    if (fileName.isEmpty() || activeDocument() == NULL)
+    if (fileName.isEmpty() || activeDocument() == NULL) {
 	return;
+    }
     activeDocument()->setFileName(fileName);
     activeDocument()->save();
-    save_action->setEnabled(!undo_group->isClean());
+    saveAction->setEnabled(!undoGroup->isClean());
 }
 
 void PixelEasel::cut()
 {
-    ImageDocument *doc = activeDocument();
-    if (doc != 0)
-        doc->cut(clipboard);
+    ImageDocument *document = activeDocument();
+    if (document != 0) {
+        document->cut(clipboard);
+    }
 }
 
 void PixelEasel::copy()
 {
-    ImageDocument *doc = activeDocument();
-    if (doc != 0)
-        doc->copy(clipboard);
+    ImageDocument *document = activeDocument();
+    if (document != 0) {
+        document->copy(clipboard);
+    }
 }
 
 void PixelEasel::paste()
 {
-    ImageDocument *doc = activeDocument();
-    if (doc != 0)
-    {
+    ImageDocument *document = activeDocument();
+    if (document != 0) {
         // TODO: we need to grab clipboard events, or check whenever focus returns to this window.
         // check if there is something in the clipboard
-        doc->paste(clipboard);
+        document->paste(clipboard);
         setTool((int)Tool::SelectTool);
         hotkeys->setTool((int) Tool::SelectTool);
     }
@@ -130,17 +130,17 @@ void PixelEasel::paste()
 
 void PixelEasel::clearSelection()
 {
-    ImageDocument *doc = activeDocument();
-    if (doc != 0)
-        doc->clearSelection();
+    ImageDocument *document = activeDocument();
+    if (document != 0) {
+        document->clearSelection();
+    }
 }
 
 void PixelEasel::selectAll()
 {
-    ImageDocument *doc = activeDocument();
-    if (doc != 0)
-    {
-        doc->setSelection(QRect(QPoint(0,0),doc->getSize()));
+    ImageDocument *document = activeDocument();
+    if (document != 0) {
+        document->setSelection(QRect(QPoint(0,0),doc->getSize()));
         setTool((int)Tool::SelectTool);
         hotkeys->setTool((int) Tool::SelectTool);
     }
@@ -149,20 +149,22 @@ void PixelEasel::selectAll()
 void PixelEasel::zoomIn()
 {
     ImageDocument *document = activeDocument();
-    if (document != 0)
-        zoom_widget->setValue(document->getZoomInActiveView()+1);
+    if (document != 0) {
+        zoomWidget->setValue(document->getZoomInActiveView()+1);
+    }
 }
 
 void PixelEasel::zoomOut()
 {
     ImageDocument *document = activeDocument();
-    if (document != 0)
-        zoom_widget->setValue(document->getZoomInActiveView()-1);
+    if (document != 0) {
+        zoomWidget->setValue(document->getZoomInActiveView()-1);
+    }
 }
 
 void PixelEasel::normalSize()
 {
-    zoom_widget->setValue(ImageCanvas::default_scale_factor);
+    zoomWidget->setValue(ImageCanvas::defaultScaleFactor);
 }
 
 void PixelEasel::resizeImage()
@@ -172,13 +174,14 @@ void PixelEasel::resizeImage()
         rd->exec();
         rd->activateWindow();
     QSize size = rd->getSize();
-    if (activeDocument() != NULL && size.isValid() && size != activeDocument()->getSize())
+    if (activeDocument() != NULL && size.isValid() && size != activeDocument()->getSize()) {
 	activeDocument()->setSize(size);
+    }
 }
 
 ImageDocument* PixelEasel::activeDocument()
 {
-    return (ImageDocument*) mdi_area->currentSubWindow();
+    return (ImageDocument*) mdiArea->currentSubWindow();
 }
 
 void PixelEasel::about()
@@ -189,71 +192,71 @@ void PixelEasel::about()
 
 void PixelEasel::createActions()
  {
-     new_action = new QAction(tr("&New..."), this);
-        new_action->setShortcut(QKeySequence::New);
-         connect(new_action, SIGNAL(triggered()), this, SLOT(newFile()));
-     open_action = new QAction(tr("&Open..."), this);
-         open_action->setShortcut(QKeySequence::Open);
-        connect(open_action, SIGNAL(triggered()), this, SLOT(open()));
-     save_action = new QAction(tr("&Save..."), this);
-        save_action->setShortcut(QKeySequence::Save);
-        save_action->setEnabled(false);
-        connect(save_action, SIGNAL(triggered()), this, SLOT(save()));
-     save_as_action = new QAction(tr("Save As..."), this);
-        save_as_action->setShortcut(QKeySequence::SaveAs);
-        save_as_action->setEnabled(false);
-        connect(save_as_action, SIGNAL(triggered()), this, SLOT(saveAs()));
-     exit_action = new QAction(tr("E&xit"), this);
-        exit_action->setShortcut(QKeySequence::Quit);
-        connect(exit_action, SIGNAL(triggered()), this, SLOT(close()));
+     newAction = new QAction(tr("&New..."), this);
+        newAction->setShortcut(QKeySequence::New);
+         connect(newAction, SIGNAL(triggered()), this, SLOT(newFile()));
+     openAction = new QAction(tr("&Open..."), this);
+         openAction->setShortcut(QKeySequence::Open);
+        connect(openAction, SIGNAL(triggered()), this, SLOT(open()));
+     saveAction = new QAction(tr("&Save..."), this);
+        saveAction->setShortcut(QKeySequence::Save);
+        saveAction->setEnabled(false);
+        connect(saveAction, SIGNAL(triggered()), this, SLOT(save()));
+     saveAsAction = new QAction(tr("Save As..."), this);
+        saveAsAction->setShortcut(QKeySequence::SaveAs);
+        saveAsAction->setEnabled(false);
+        connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
+     exitAction = new QAction(tr("E&xit"), this);
+        exitAction->setShortcut(QKeySequence::Quit);
+        connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
 
-     undo_action = undo_group->createUndoAction(this, tr("&Undo"));
-        undo_action->setShortcuts(QKeySequence::Undo);
-     redo_action = undo_group->createRedoAction(this, tr("&Redo"));
-        redo_action->setShortcuts(QKeySequence::Redo);
+     undoAction = undoGroup->createUndoAction(this, tr("&Undo"));
+        undoAction->setShortcuts(QKeySequence::Undo);
+     redoAction = undoGroup->createRedoAction(this, tr("&Redo"));
+        redoAction->setShortcuts(QKeySequence::Redo);
 
-     cut_action = new QAction(tr("Cu&t"), this);
-        cut_action->setShortcut(QKeySequence::Cut);
-        connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
-     copy_action = new QAction(tr("&Copy"), this);
-        copy_action->setShortcut(QKeySequence::Copy);
-        connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
-     paste_action = new QAction(tr("&Paste"), this);
-        paste_action->setShortcut(QKeySequence::Paste);
-        connect(paste_action, SIGNAL(triggered()), this, SLOT(paste()));
-     clear_selection_action = new QAction(tr("C&lear Selection"), this);
-        clear_selection_action->setShortcut(QKeySequence::Delete);
-        connect(clear_selection_action, SIGNAL(triggered()), this, SLOT(clearSelection()));
+     cutAction = new QAction(tr("Cu&t"), this);
+        cutAction->setShortcut(QKeySequence::Cut);
+        connect(cutAction, SIGNAL(triggered()), this, SLOT(cut()));
+     copyAction = new QAction(tr("&Copy"), this);
+        copyAction->setShortcut(QKeySequence::Copy);
+        connect(copyAction, SIGNAL(triggered()), this, SLOT(copy()));
+     pasteAction = new QAction(tr("&Paste"), this);
+        pasteAction->setShortcut(QKeySequence::Paste);
+        connect(pasteAction, SIGNAL(triggered()), this, SLOT(paste()));
+     clearSelectionAction = new QAction(tr("C&lear Selection"), this);
+        clearSelectionAction->setShortcut(QKeySequence::Delete);
+        connect(clearSelectionAction, SIGNAL(triggered()), this, SLOT(clearSelection()));
 
-     select_all_action = new QAction(tr("&Select All"), this);
-        select_all_action->setShortcut(QKeySequence::SelectAll);
-        connect(select_all_action, SIGNAL(triggered()), this, SLOT(selectAll()));
+     selectAllAction = new QAction(tr("&Select All"), this);
+        selectAllAction->setShortcut(QKeySequence::SelectAll);
+        connect(selectAllAction, SIGNAL(triggered()), this, SLOT(selectAll()));
 
-     edit_actions_action = new QAction(tr("&Edit Actions"), this);
-        connect(edit_actions_action, SIGNAL(triggered()), this, SLOT(editActions()));
-     save_actions_action = new QAction(tr("S&ave Actions"), this);
-        connect(save_actions_action, SIGNAL(triggered()), this, SLOT(saveActions()));
+     editActionsAction = new QAction(tr("&Edit Actions"), this);
+        connect(editActionsAction, SIGNAL(triggered()), this, SLOT(editActions()));
+     saveActionsAction = new QAction(tr("S&ave Actions"), this);
+        connect(saveActionsAction, SIGNAL(triggered()), this, SLOT(saveActions()));
 
-     zoom_in_action = new QAction(tr("Zoom &In"), this);
-        zoom_in_action->setShortcut(QKeySequence::ZoomIn);
-        zoom_in_action->setEnabled(false);
-        connect(zoom_in_action, SIGNAL(triggered()), this, SLOT(zoomIn()));
-     zoom_out_action = new QAction(tr("Zoom &Out"), this);
-        zoom_out_action->setShortcut(QKeySequence::ZoomOut);
-        zoom_out_action->setEnabled(false);
-        connect(zoom_out_action, SIGNAL(triggered()), this, SLOT(zoomOut()));
-     normal_size_action = new QAction(tr("&Normal Size"), this);
-        normal_size_action->setEnabled(false);
-        connect(normal_size_action, SIGNAL(triggered()), this, SLOT(normalSize()));
+     zoomInAction = new QAction(tr("Zoom &In"), this);
+        zoomInAction->setShortcut(QKeySequence::ZoomIn);
+        zoomInAction->setEnabled(false);
+        connect(zoomInAction, SIGNAL(triggered()), this, SLOT(zoomIn()));
+     zoomOutAction = new QAction(tr("Zoom &Out"), this);
+        zoomOutAction->setShortcut(QKeySequence::ZoomOut);
+        zoomOutAction->setEnabled(false);
+        connect(zoomOutAction, SIGNAL(triggered()), this, SLOT(zoomOut()));
+     normalSizeAction = new QAction(tr("&Normal Size"), this);
+        normalSizeAction->setEnabled(false);
+        connect(normalSizeAction, SIGNAL(triggered()), this, SLOT(normalSize()));
 
-     resize_action = new QAction(tr("&Resize Image"), this);
-        resize_action->setEnabled(false);
-        connect(resize_action, SIGNAL(triggered()), this, SLOT(resizeImage()));
+     resizeAction = new QAction(tr("&Resize Image"), this);
+        resizeAction->setEnabled(false);
+        connect(resizeAction, SIGNAL(triggered()), this, SLOT(resizeImage()));
 
-     about_action = new QAction(tr("&About"), this);
-        connect(about_action, SIGNAL(triggered()), this, SLOT(about()));
-     about_qt_action = new QAction(tr("About &Qt"), this);
-        connect(about_qt_action, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+     aboutAction = new QAction(tr("&About"), this);
+        connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
+     aboutQtAction = new QAction(tr("About &Qt"), this);
+        connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
  }
 
 void PixelEasel::createHotkeys()
@@ -268,101 +271,101 @@ void PixelEasel::createHotkeys()
 void PixelEasel::createMenus()
 {
      fileMenu = new QMenu(tr("&File"), this);
-     fileMenu->addAction(new_action);
-     fileMenu->addAction(open_action);
-     fileMenu->addAction(save_action);
-     fileMenu->addAction(save_as_action);
+     fileMenu->addAction(newAction);
+     fileMenu->addAction(openAction);
+     fileMenu->addAction(saveAction);
+     fileMenu->addAction(saveAsAction);
      fileMenu->addSeparator();
-     fileMenu->addAction(exit_action);
+     fileMenu->addAction(exitAction);
      menuBar()->addMenu(fileMenu);
 
      editMenu = new QMenu(tr("&Edit"), this);
-     editMenu->addAction(undo_action);
-     editMenu->addAction(redo_action);
+     editMenu->addAction(undoAction);
+     editMenu->addAction(redoAction);
      editMenu->addSeparator();
-     editMenu->addAction(cut_action);
-     editMenu->addAction(copy_action);
-     editMenu->addAction(paste_action);
+     editMenu->addAction(cutAction);
+     editMenu->addAction(copyAction);
+     editMenu->addAction(pasteAction);
      editMenu->addSeparator();
-     editMenu->addAction(clear_selection_action);
-     editMenu->addAction(select_all_action);
+     editMenu->addAction(clearSelectionAction);
+     editMenu->addAction(selectAllAction);
      editMenu->addSeparator();
-     editMenu->addAction(edit_actions_action);
-     editMenu->addAction(save_actions_action);
+     editMenu->addAction(editActionsAction);
+     editMenu->addAction(saveActionsAction);
      menuBar()->addMenu(editMenu);
 
      viewMenu = new QMenu(tr("&View"), this);
-     viewMenu->addAction(zoom_in_action);
-     viewMenu->addAction(zoom_out_action);
-     viewMenu->addAction(normal_size_action);
+     viewMenu->addAction(zoomInAction);
+     viewMenu->addAction(zoomOutAction);
+     viewMenu->addAction(normalSizeAction);
      menuBar()->addMenu(viewMenu);
 
      imageMenu = new QMenu(tr("&Image"), this);
-     imageMenu->addAction(resize_action);
+     imageMenu->addAction(resizeAction);
      menuBar()->addMenu(imageMenu);
 
      helpMenu = new QMenu(tr("&Help"), this);
-     helpMenu->addAction(about_action);
-     helpMenu->addAction(about_qt_action);
+     helpMenu->addAction(aboutAction);
+     helpMenu->addAction(aboutQtAction);
      menuBar()->addMenu(helpMenu);
 }
 
 void PixelEasel::createDocks()
 {
-    preview_dock = new QDockWidget(tr("Preview"), this);
-    preview_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, preview_dock);
+    previewDock = new QDockWidget(tr("Preview"), this);
+    previewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, previewDock);
     previews = new QStackedWidget();
-    preview_dock->setWidget(previews);
+    previewDock->setWidget(previews);
 
-    history_dock = new QDockWidget(tr("History"), this);
-    history_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    addDockWidget(Qt::RightDockWidgetArea, history_dock);
+    historyDock = new QDockWidget(tr("History"), this);
+    historyDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    addDockWidget(Qt::RightDockWidgetArea, historyDock);
     createUndoView();
-    history_dock->setWidget(undo_view);
+    historyDock->setWidget(undoView);
 
-    palette_dock = new QDockWidget(tr("Palette"), this);
-    palette_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
-    addDockWidget(Qt::BottomDockWidgetArea, palette_dock);
-    palette_view = new PaletteWidget(this);
-    connect(palette_view,   SIGNAL(colourSelected(PaletteColour*)),
+    paletteDock = new QDockWidget(tr("Palette"), this);
+    paletteDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+    addDockWidget(Qt::BottomDockWidgetArea, paletteDock);
+    paletteView = new PaletteWidget(this);
+    connect(paletteView,   SIGNAL(colourSelected(PaletteColour*)),
             this,           SLOT(setColour(PaletteColour*)));
-    palette_dock->setWidget(palette_view);
+    paletteDock->setWidget(paletteView);
 
-    view_dock = new QDockWidget(tr("View"), this);
-    view_dock->setAllowedAreas(Qt::BottomDockWidgetArea);
-    addDockWidget(Qt::BottomDockWidgetArea, view_dock);
-    zoom_widget = new ZoomWidget(8, ImageCanvas::scale_factor_strings);
-    zoom_widget->setValue(ImageCanvas::default_scale_factor);
-    connect(zoom_widget,  SIGNAL(valueChanged(int)),
+    viewDock = new QDockWidget(tr("View"), this);
+    viewDock->setAllowedAreas(Qt::BottomDockWidgetArea);
+    addDockWidget(Qt::BottomDockWidgetArea, viewDock);
+    zoomWidget = new ZoomWidget(8, ImageCanvas::scaleFactorStrings);
+    zoomWidget->setValue(ImageCanvas::defaultScaleFactor);
+    connect(zoomWidget,  SIGNAL(valueChanged(int)),
             this,           SLOT(zoomChanged(int)));
-    view_dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    view_dock->setWidget(zoom_widget);
-    view_dock->resize(200, 200);
+    viewDock->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    viewDock->setWidget(zoomWidget);
+    viewDock->resize(200, 200);
 
     viewMenu->addSeparator();
-    viewMenu->addAction(preview_dock->toggleViewAction());
-    viewMenu->addAction(history_dock->toggleViewAction());
-    viewMenu->addAction(palette_dock->toggleViewAction());
+    viewMenu->addAction(previewDock->toggleViewAction());
+    viewMenu->addAction(historyDock->toggleViewAction());
+    viewMenu->addAction(paletteDock->toggleViewAction());
 }
 
 void PixelEasel::createUndoView()
 {
-    undo_view = new QUndoView(undo_group, history_dock);
+    undoView = new QUndoView(undoGroup, historyDock);
     // resize it somehow.
-    undo_view->setWindowTitle(tr("Command List"));
-    undo_view->show();
-    undo_view->setAttribute(Qt::WA_QuitOnClose, false);
+    undoView->setWindowTitle(tr("Command List"));
+    undoView->show();
+    undoView->setAttribute(Qt::WA_QuitOnClose, false);
 }
 
 void PixelEasel::updateActions()
 {
     bool hasDocument = (this->activeDocument() != 0);
-    zoom_in_action->setEnabled(hasDocument);
-    zoom_out_action->setEnabled(hasDocument);
-    resize_action->setEnabled(hasDocument);
-    normal_size_action->setEnabled(hasDocument); // check zoom levels
-    save_as_action->setEnabled(hasDocument);
+    zoomInAction->setEnabled(hasDocument);
+    zoomOutAction->setEnabled(hasDocument);
+    resizeAction->setEnabled(hasDocument);
+    normalSizeAction->setEnabled(hasDocument); // check zoom levels
+    saveAsAction->setEnabled(hasDocument);
 
     updateEditActions(this->activeDocument()->hasSelection());
 }
@@ -371,13 +374,15 @@ void PixelEasel::updateEditActions(bool hasSelection)
 {
     bool hasDocument = (this->activeDocument() != 0);
     bool hasClipboard = false;
-    if (hasDocument)
+    if (hasDocument) {
         hasClipboard = true;    //TODO: if something is in the clipboard
-    else
+    }
+    else {
         hasSelection = false;
-    clear_selection_action->setEnabled(hasSelection);
-    cut_action->setEnabled(hasSelection);
-    copy_action->setEnabled(hasSelection);
+    }
+    clearSelectionAction->setEnabled(hasSelection);
+    cutAction->setEnabled(hasSelection);
+    copyAction->setEnabled(hasSelection);
 }
 
 void PixelEasel::adjustScrollBar(QScrollBar *scroll_bar, double factor)
@@ -389,52 +394,49 @@ void PixelEasel::adjustScrollBar(QScrollBar *scroll_bar, double factor)
 void PixelEasel::setupContext(ImageDocument* imageDocument)
 {
     QUndoStack *newUndoStack = new QUndoStack();
-    undo_group->addStack(newUndoStack);
-    undo_group->setActiveStack(newUndoStack);
+    undoGroup->addStack(newUndoStack);
+    undoGroup->setActiveStack(newUndoStack);
     imageDocument->setUndoStack(newUndoStack);
-    mdi_area->addSubWindow(imageDocument);
+    mdiArea->addSubWindow(imageDocument);
     connect(imageDocument,  SIGNAL(imageModified(const QImage&)),
-	    this,	    SLOT(updateActions()));
+            this,	    SLOT  (updateActions()));
     connect(imageDocument,  SIGNAL(selectionModified(bool)),
-            this,	    SLOT(updateEditActions(bool)));
-    connect(mdi_area,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
-            this,	    SLOT(updateContext(QMdiSubWindow*)));
-    connect(undo_group,	    SIGNAL(cleanChanged(bool)),
-            this,	    SLOT(updateSave(bool)));
+            this,	    SLOT  (updateEditActions(bool)));
+    connect(mdiArea,	    SIGNAL(subWindowActivated(QMdiSubWindow*)),
+            this,	    SLOT  (updateContext(QMdiSubWindow*)));
+    connect(undoGroup,	    SIGNAL(cleanChanged(bool)),
+            this,	    SLOT  (updateSave(bool)));
     previews->insertWidget(0, imageDocument->getPreview());
     // TODO: somehow get it to remove the widget when it gets destroyed
 }
 
 void PixelEasel::updateContext(QMdiSubWindow* window)
 {
-    if (window != 0 && old_window != window)
-    {
-        old_window = window;    // avoid repeated, unnecessary updates
+    if (window != 0 && old_window != window) {
+        oldWindow = window;    // avoid repeated, unnecessary updates
         ImageDocument* document = (ImageDocument*) window;
-        undo_group->setActiveStack(document->getUndoStack());
+        undoGroup->setActiveStack(document->getUndoStack());
         document->setToolInActiveView(hotkeys->getToolType());
         ImagePreview* preview = document->getPreview();
             preview->resize(QSize(50,50));
         this->previews->setCurrentWidget(preview);
         document->refreshScratchpad();
-        palette_view->changeSwatch(document->getPalette());
-        zoom_widget->setValue(document->getZoomInActiveView());
+        paletteView->changeSwatch(document->getPalette());
+        zoomWidget->setValue(document->getZoomInActiveView());
     }
 }
 
 void PixelEasel::updateSave(bool save_state)
 {
-    save_action->setEnabled(!save_state && activeDocument()->hasFile());
+    saveAction->setEnabled(!save_state && activeDocument()->hasFile());
 }
 
 void PixelEasel::closeEvent(QCloseEvent* e)
 {
-    QList<QMdiSubWindow *> list = mdi_area->subWindowList(QMdiArea::StackingOrder);
+    QList<QMdiSubWindow *> list = mdiArea->subWindowList(QMdiArea::StackingOrder);
     QList<QMdiSubWindow *>::iterator i;
-    for (i = list.begin(); i != list.end(); ++i)
-    {
-        if(!(*i)->close())
-        {
+    for (i = list.begin(); i != list.end(); ++i) {
+        if(!(*i)->close()) {
             e->ignore();
             return;
         }
@@ -444,14 +446,16 @@ void PixelEasel::closeEvent(QCloseEvent* e)
 
 void PixelEasel::setTool(int type)
 {
-    if (activeDocument() != NULL)
+    if (activeDocument() != NULL) {
         activeDocument()->setToolInActiveView((Tool::ToolTypes) type);
+    }
 }
 
 void PixelEasel::setColour(PaletteColour* colour)
 {
-    if (activeDocument() != NULL)
+    if (activeDocument() != NULL) {
         activeDocument()->setColour(colour);
+    }
 }
 
 void PixelEasel::loadActions()
@@ -469,8 +473,9 @@ void PixelEasel::loadActions()
         action = i.next();
         if (!action->text().isEmpty()) {
             QVariant shortcut = settings.value(action->text());
-            if (!shortcut.isNull())
+            if (!shortcut.isNull()) {
                 action->setShortcut(QKeySequence(shortcut.toString()));
+            }
         }
     }
 }
@@ -481,11 +486,11 @@ void PixelEasel::editActions()
     QList<QAction *> list;
     QListIterator<QAction*> i(actions);
     QAction *action;
-    while (i.hasNext())
-    {
+    while (i.hasNext()) {
         action = i.next();
-        if (!action->text().isEmpty())
+        if (!action->text().isEmpty()) {
             list.push_back(action);
+        }
     }
     ActionsDialog actions_dialog(list, this);
     actions_dialog.exec();
@@ -500,11 +505,9 @@ void PixelEasel::saveActions()
     QListIterator<QAction*> i(actions);
     QAction *action;
 
-    while (i.hasNext())
-    {
+    while (i.hasNext()) {
         action = i.next();
-        if (!action->shortcut().isEmpty())
-        {
+        if (!action->shortcut().isEmpty()) {
             QString shortcut = QString(action->shortcut());
             settings.setValue(action->text(), shortcut);
         }
@@ -513,6 +516,7 @@ void PixelEasel::saveActions()
 
 void PixelEasel::zoomChanged(int new_scale)
 {
-    if (activeDocument() != NULL)
+    if (activeDocument() != NULL) {
         activeDocument()->setZoomInActiveView(new_scale);
+    }
 }

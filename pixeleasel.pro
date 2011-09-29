@@ -5,44 +5,44 @@ TARGET = pixeleasel
 TEMPLATE = app
 SOURCES += main.cpp \
     ImageView.cpp \
-    Widgets/HotkeyBar.cpp \
     ImagePreview.cpp \
     Palette.cpp \
     PaletteColour.cpp \
-    PaletteWidget.cpp \
-    PaletteColourWidget.cpp \
-    Layers/Layer.cpp \
+    FlowLayout.cpp \
+    ActionsDialog.cpp \
+    ImageDocument.cpp
+SOURCES += Layers/Layer.cpp \
     Layers/BackgroundLayer.cpp \
-    Layers/SolidBackgroundLayer.cpp \
-    Tools/Tool.cpp \
+    Layers/SolidBackgroundLayer.cpp
+SOURCES += Tools/Tool.cpp \
     Tools/LineTool.cpp \
     Tools/PenTool.cpp \
     Tools/SelectTool.cpp \
-    FlowLayout.cpp \
-    Tools/EyedropTool.cpp \
-    ActionsDialog.cpp \
+    Tools/EyedropTool.cpp
+SOURCES += Widgets/HotkeyBar.cpp \
+    Widgets/PaletteWidget.cpp \
+    Widgets/PaletteColourWidget.cpp \
     Widgets/ZoomWidget.cpp
 SOURCES += ResizeDialog.cpp
 SOURCES += Commands.cpp
 SOURCES += PixelEasel.cpp
 SOURCES += ImageCanvas.cpp
-SOURCES += ImageDocument.cpp
 HEADERS += PixelEasel.h \
     ImageView.h \
-    Widgets/HotkeyBar.h \
     ImagePreview.h \
     Palette.h \
     PaletteColour.h \
-    PaletteWidget.h \
-    PaletteColourWidget.h \
     FlowLayout.h \
-    Tools/EyedropTool.h \
-    ActionsDialog.h \
+    ActionsDialog.h
+HEADERS += Widgets/HotkeyBar.h \
+    Widgets/PaletteWidget.h \
+    Widgets/PaletteColourWidget.h \
     Widgets/ZoomWidget.h
 HEADERS += Layers/Layer.h \
     Layers/BackgroundLayer.h \
     Layers/SolidBackgroundLayer.h
 HEADERS += Tools/Tool.h \
+    Tools/EyedropTool.h \
     Tools/LineTool.h \
     Tools/PenTool.h \
     Tools/SelectTool.h

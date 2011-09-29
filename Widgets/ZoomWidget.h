@@ -21,16 +21,14 @@ signals:
 
 private:
     // Interface Elements
-    QSlider        *i_zoom_slider;
-    QHBoxLayout    *i_outer_layout;
-    QComboBox      *i_zoom_dropdown;
+    QSlider        *zoomSlider;
+    QHBoxLayout    *outerLayout;
+    QComboBox      *zoomDropdown;
 
-    // Counts
     int             n_levels;
 
-    // Class Members
-    int             m_current_level;    // defaults to 1
-    QString        *m_descriptions;
+    int             currentLevel;    // defaults to 1
+    QString        *descriptions;
 };
 
 #endif // ZOOMWIDGET_H

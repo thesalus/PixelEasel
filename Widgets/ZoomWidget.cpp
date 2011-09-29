@@ -9,45 +9,44 @@
  * document should be independent of each other.
  */
 
-ZoomWidget::ZoomWidget(int levels, QString descriptions[]) :
-        n_levels(levels)
-        , m_current_level(1)
-        , m_descriptions(descriptions)
+ZoomWidget::ZoomWidget(int levels, QString descriptions[])
+    : n_levels(levels)
+    , currentLevel(1)
+    , descriptions(descriptions)
 {
     Q_ASSERT(levels > 0);
 
-    i_zoom_slider = new QSlider(Qt::Horizontal, this);
-    i_zoom_slider->setRange(0, levels-1);
-    i_zoom_slider->setTracking(true);
-    i_zoom_slider->setTickPosition (QSlider::TicksAbove);
-    connect(i_zoom_slider,  SIGNAL(valueChanged(int)),
-            this,           SLOT(setValue(int)));
-    i_zoom_dropdown = new QComboBox(this);
-    for (int i = 0; i < levels; i++)
-    {
-        i_zoom_dropdown->insertItem(i, descriptions[i]);
+    zoomSlider = new QSlider(Qt::Horizontal, this);
+    zoomSlider->setRange(0, levels-1);
+    zoomSlider->setTracking(true);
+    zoomSlider->setTickPosition (QSlider::TicksAbove);
+    connect(zoomSlider,     SIGNAL(valueChanged(int)),
+            this,           SLOT  (setValue(int)));
+    zoomDropdown = new QComboBox(this);
+    for (int i = 0; i < levels; i++) {
+        zoomDropdown->insertItem(i, descriptions[i]);
     }
-    connect(i_zoom_dropdown,    SIGNAL(currentIndexChanged(int)),
-            this,               SLOT(setValue(int)));
+    connect(zoomDropdown,    SIGNAL(currentIndexChanged(int)),
+            this,            SLOT  (setValue(int)));
 
-
-    i_outer_layout = new QHBoxLayout;
-        i_outer_layout->addWidget(i_zoom_dropdown);
-        i_outer_layout->addWidget(i_zoom_slider);
-    setLayout(i_outer_layout);
+    outerLayout = new QHBoxLayout;
+        outerLayout->addWidget(zoomDropdown);
+        outerLayout->addWidget(zoomSlider);
+    setLayout(outerLayout);
 }
 
 void ZoomWidget::setValue(int level)
 {
-    if (level != m_current_level)
-    {
-        if (level > 7)
+    if (level != currentLevel) {
+        if (level > 7) {
             level = 7;
-        else if (level < 0)
+        }
+        else if (level < 0) {
             level = 0;
-        m_current_level = level;
-        i_zoom_slider->setValue(level);
-        i_zoom_dropdown->setCurrentIndex(level);
+        }
+        currentLevel = level;
+        zoomSlider->setValue(level);
+        zoomDropdown->setCurrentIndex(level);
         emit valueChanged(level);
     }
 }

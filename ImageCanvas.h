@@ -14,8 +14,8 @@ class ImageCanvas : public ImageView
 {
     Q_OBJECT
 public:
-    static int default_scale_factor;
-    static QString  scale_factor_strings[];
+    static int defaultScaleFactor;
+    static QString  scaleFactorStrings[];
 
     ImageCanvas(ImageDocument *document);
     ~ImageCanvas();
@@ -49,12 +49,12 @@ private:
 
     BackgroundLayer*background;
 
-    static double   scale_factors[];
+    static double   scaleFactors[];
     int             m_scale;
 
     Tool	   *currentTool;
     QRubberBand    *rubberBand;
-    QRect           mySelection;
+    QRect           selection;
 };
 
 #endif // IMAGECANVAS_H

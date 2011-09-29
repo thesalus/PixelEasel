@@ -2,6 +2,8 @@
 #include "Layers/SolidBackgroundLayer.h"
 #include "ImageDocument.h"
 
+#define PREVIEW_SIZE 70
+
 ImagePreview::ImagePreview(ImageDocument *document)
     :   ImageView(document),
         background(new SolidBackgroundLayer(document->getSize(), Qt::green))
@@ -24,24 +26,24 @@ void ImagePreview::setTool(Tool::ToolTypes)
 
 void ImagePreview::refreshImage(const QImage& image)
 {
-    QImage  new_image = ((Layer) image.copy()).layOver(background->copy());
-    int preview_width = 70;
-    int preview_height = 70;
-    int width = new_image.width();
-    int height = new_image.height();
-    if (width > preview_width) {
-        if (height > width)
-        {
-            width = preview_width*width/height;
-            height = preview_height;
-        } else {
-            height = preview_height*height/width;
-            width = preview_width;
+    QImage  newImage  = ((Layer) image.copy()).layOver(background->copy());
+    int previewWidth  = PREVIEW_SIZE;
+    int previewHeight = PREVIEW_SIZE;
+    int width  = newImage.width();
+    int height = newImage.height();
+    if (width > previewWidth) {
+        if (height > width) {
+            width = previewWidth*width/height;
+            height = previewHeight;
         }
-    } else if (height > preview_height) {
-        width = preview_width*width/height;
-        height = preview_height;
+        else {
+            height = previewHeight*height/width;
+            width = previewWidth;
+        }
+    } else if (height > previewHeight) {
+        width = previewWidth*width/height;
+        height = previewHeight;
     }
-    this->setPixmap(QPixmap::fromImage(new_image.scaled(width, height)));
+    this->setPixmap(QPixmap::fromImage(newImage.scaled(width, height)));
     this->repaint();
 }

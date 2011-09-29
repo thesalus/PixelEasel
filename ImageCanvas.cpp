@@ -6,15 +6,15 @@
 #include "Tools/SelectTool.h"
 #include "Layers/SolidBackgroundLayer.h"
 
-int ImageCanvas::default_scale_factor = 3;
-double ImageCanvas::scale_factors[] = {10, 25, 50, 100, 200, 400, 800, 1600};
-QString ImageCanvas::scale_factor_strings[] = {"10%","25%","50%","100%","200%","400%","800%","1600%"};
+int ImageCanvas::defaultScaleFactor = 3;
+double ImageCanvas::scaleFactors[] = {10, 25, 50, 100, 200, 400, 800, 1600};
+QString ImageCanvas::scaleFactorStrings[] = {"10%","25%","50%","100%","200%","400%","800%","1600%"};
 
-ImageCanvas::ImageCanvas(ImageDocument* document) :
-    ImageView(document),
-    background(new SolidBackgroundLayer(document_m->getSize(), Qt::green)),
-    m_scale(default_scale_factor),
-    rubberBand(0)
+ImageCanvas::ImageCanvas(ImageDocument* document)
+    : ImageView(document)
+    , background(new SolidBackgroundLayer(document_m->getSize(), Qt::green))
+    , m_scale(defaultScaleFactor)
+    , rubberBand(0)
 {
     this->setBackgroundRole(QPalette::Base);
     currentTool = new PenTool(document_m);
@@ -32,7 +32,7 @@ ImageCanvas::~ImageCanvas()
  */
 void ImageCanvas::resetScale()
 {
-    this->setScale(default_scale_factor);
+    this->setScale(defaultScaleFactor);
 }
 
 int ImageCanvas::getScale()
@@ -42,10 +42,12 @@ int ImageCanvas::getScale()
 
 void ImageCanvas::setScale(int new_factor)
 {
-    if (new_factor > 7)
+    if (new_factor > 7) {
         new_factor = 7;
-    else if (new_factor < 0)
+    }
+    else if (new_factor < 0) {
         new_factor = 0;
+    }
     m_scale = new_factor;
     QImage* new_image = document_m->getImage();
     this->refreshImage(*new_image);
@@ -55,10 +57,9 @@ void ImageCanvas::setScale(int new_factor)
 
 void ImageCanvas::refreshImage(const QImage& image)
 {
-    QSize new_size = image.size()*scale_factors[m_scale]/100;
+    QSize new_size = image.size()*scaleFactors[m_scale]/100;
 
-    if (image.size() != background->size())
-    {
+    if (image.size() != background->size()) {
         BackgroundLayer * replacement = background->copySized(image.size());
         delete background;
         background = replacement;
@@ -73,7 +74,7 @@ void ImageCanvas::refreshImage(const QImage& image)
 QPoint ImageCanvas::normalizePoint(QPoint point)
 {
     // I suspect this may be slightly slow.
-    return (point-QPoint(scale_factors[m_scale]/100.0, scale_factors[m_scale]/100.0)/2)*100.0/scale_factors[m_scale];
+    return (point-QPoint(scaleFactors[m_scale]/100.0, scaleFactors[m_scale]/100.0)/2)*100.0/scaleFactors[m_scale];
 }
 
 void ImageCanvas::mousePressEvent(QMouseEvent *event)
@@ -105,8 +106,7 @@ void ImageCanvas::setTool(Tool::ToolTypes type)
     if (currentTool) {
         delete currentTool;
     }
-    switch(type)
-    {
+    switch(type) {
     case Tool::PenTool :
         currentTool = new PenTool(document_m);
         break;
@@ -124,28 +124,24 @@ void ImageCanvas::setTool(Tool::ToolTypes type)
 
 void ImageCanvas::setSelectBox(QRect rect)
 {
-    if (!rubberBand)
-    {
+    if (!rubberBand) {
         rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     }
-    mySelection = rect;
-    rubberBand->setGeometry(QRect(rect.topLeft()*scale_factors[m_scale]/100,
-                                  rect.size()*scale_factors[m_scale]/100));
+    selection = rect;
+    rubberBand->setGeometry(QRect(rect.topLeft()*scaleFactors[m_scale]/100,
+                                  rect.size()*scaleFactors[m_scale]/100));
     rubberBand->show();
     emit selectionModified();
 }
 
 void ImageCanvas::showSelection(bool show)
 {
-    if (rubberBand)
-    {
-        if (show)
-        {
+    if (rubberBand) {
+        if (show) {
             rubberBand->show();
-            mySelection = QRect();
+            selection = QRect();
         }
-        else
-        {
+        else {
             rubberBand->hide();
         }
     }

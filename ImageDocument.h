@@ -1,14 +1,15 @@
 #ifndef IMAGEDOCUMENT_H
 #define IMAGEDOCUMENT_H
 
-#include <QMdiSubWindow>
-#include <QImage>
-#include <QScrollArea>
 #include <QClipboard>
+#include <QHash>
+#include <QImage>
+#include <QMdiSubWindow>
 #include <QMessageBox>
+#include <QScrollArea>
+#include <QUndoStack>
 #include "ImageCanvas.h"
 #include "ImagePreview.h"
-#include <QUndoStack>
 #include "Layers/Layer.h"
 #include "Palette.h"
 #include "PaletteColour.h"
@@ -47,7 +48,7 @@ public:
 
     void            setSelection(QRect rect);
     void            setSize(QSize new_size);
-    void            setUndoStack(QUndoStack* new_undo_stack);
+    void            setUndoStack(QUndoStack* new_undoStack);
 
     bool            hasFile();
     bool            hasSelection();
@@ -75,21 +76,22 @@ signals:
 private:
     static int	    c_untitled_documents;       // tracks the number that will be appended to new unnamed documents
 
-    QString	    file_name;
-    bool            f_has_file;
-    bool            f_selection_changed;
-    bool            emptyScratchpadSelection;
-    int		    image_index;
-    QVector<Layer*> image_layers;
+    QString	    fileName;
+    bool            isSavedToFile;
+    bool            isSelectionChanged;
+    bool            isScratchpadSelectionEmpty;
+
+    int		    imageIndex;
+    QVector<Layer*> imageLayers;
     Layer	    scratchpad;
     QVector<ImageView*>	views;
-    QScrollArea    *scroll_area;
-    QUndoStack     *undo_stack;
+    QScrollArea    *scrollArea;
+    QUndoStack     *undoStack;
     QImage          preScratch;
-    QPoint          scratchpad_translation;
+    QPoint          scratchpadTranslation;
     ImagePreview   *preview;
     Palette        *palette;
-    QVector<QRgb>   colour_table;
+    QVector<QRgb>   colourTable;
 
     QPen            m_pen;
     int		    m_pen_width;
@@ -98,6 +100,8 @@ private:
     void            clearRect(QRect rect);
     void	    makeChange();   // make change, and refresh image
     void	    initialize();
+    void            initializeColourTable();
+    void            addColourToTable(QRgb key, QHash<QRgb, int> & colourHash);
 };
 
 #endif // IMAGEDOCUMENT_H

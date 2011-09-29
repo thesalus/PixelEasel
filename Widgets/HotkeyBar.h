@@ -10,7 +10,7 @@
 class HotkeyBar : public QToolBar
 {
     Q_OBJECT
-    unsigned int    max_hotkeys;
+    unsigned int    maxHotkeys;
     Tool::ToolTypes selection;
     QActionGroup    tools;   // do we need to customize these too? drag+drop...
     QSignalMapper  *mapper;

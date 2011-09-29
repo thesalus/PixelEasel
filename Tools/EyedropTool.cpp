@@ -18,8 +18,7 @@ void EyedropTool::mousePressEvent(QMouseEvent *event)
 
 void EyedropTool::mouseMoveEvent(QMouseEvent *event)
 {
-    if (sampling && (event->buttons() & Qt::LeftButton))
-    {
+    if (sampling && (event->buttons() & Qt::LeftButton)) {
         colour = document_m->getPixel(event->pos());
         document_m->setColour(colour);
         // this shouldn't actually change hte value.
@@ -29,8 +28,7 @@ void EyedropTool::mouseMoveEvent(QMouseEvent *event)
 
 void EyedropTool::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton && sampling)
-    {
+    if (event->button() == Qt::LeftButton && sampling) {
         document_m->setColour(colour);
         sampling = false;
     }

@@ -22,14 +22,14 @@ private slots:
     void rejectSize();
 
 protected:
-    QSize           original_size;
-    QSize           return_size;
-    QLabel         *width_label;
-    QLabel         *height_label;
-    QSpinBox       *width_input;
-    QSpinBox       *height_input;
-    QPushButton    *resize_button;
-    QPushButton    *cancel_button;
+    QSize           originalSize;
+    QSize           returnSize;
+    QLabel         *widthLabel;
+    QLabel         *heightLabel;
+    QSpinBox       *widthInput;
+    QSpinBox       *heightInput;
+    QPushButton    *resizeButton;
+    QPushButton    *cancelButton;
 };
 
 #endif // RESIZEDIALOG_H
