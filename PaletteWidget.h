@@ -2,6 +2,7 @@
 #define PALETTEWIDGET_H
 
 #include <QFrame>
+#include <QFormLayout>
 #include <QVector>
 #include "FlowLayout.h"
 #include "Palette.h"
@@ -17,12 +18,17 @@ public:
     void changeSwatch(Palette*);
 
 private:
-    Palette* palette;
     QVector<PaletteColourWidget*> swatch;
-    FlowLayout *outer_layout;
+    QFormLayout * outerLayout;
+    FlowLayout  * paletteLayout;
+
+    Palette     * palette;
+    PaletteColourWidget * activeColour;
+
+    void emptySwatch();
 
 signals:
-    void selectedColour(PaletteColour*);
+    void colourSelected(PaletteColour*);
 
 public slots:
     void addColour();

@@ -325,7 +325,7 @@ void PixelEasel::createDocks()
     palette_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
     addDockWidget(Qt::BottomDockWidgetArea, palette_dock);
     palette_view = new PaletteWidget(this);
-    connect(palette_view,   SIGNAL(selectedColour(PaletteColour*)),
+    connect(palette_view,   SIGNAL(colourSelected(PaletteColour*)),
             this,           SLOT(setColour(PaletteColour*)));
     palette_dock->setWidget(palette_view);
 

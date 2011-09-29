@@ -8,7 +8,10 @@ class PaletteColourWidget : public QLabel
 {
     Q_OBJECT
 public:
+    static const int size = 25;
+
     explicit PaletteColourWidget(QWidget *parent, PaletteColour* colour);
+    void setPaletteColour(PaletteColour * colour);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);

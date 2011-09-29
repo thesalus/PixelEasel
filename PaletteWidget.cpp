@@ -1,63 +1,92 @@
-#include "PaletteWidget.h"
-#include "PaletteColour.h"
-#include <QPushButton>
 #include <QColorDialog>
+#include <QPushButton>
+#include <QVBoxLayout>
+
+#include "FlowLayout.h"
+#include "PaletteColour.h"
+#include "PaletteWidget.h"
 
 PaletteWidget::PaletteWidget(QWidget *parent) :
     QFrame(parent)
 {
-    QPushButton* add_colour = new QPushButton("+");
-    outer_layout = new FlowLayout;
-    outer_layout->addWidget(add_colour);
-    setLayout(outer_layout);
-    connect(add_colour,	SIGNAL(clicked()),
-            this,	SLOT(addColour()));
+    QPushButton* addColour = new QPushButton("+");
+
+    QFrame* activeRegion = new QFrame();
+    QFrame* paletteBox   = new QFrame();
+
+    QVBoxLayout* activeRegionLayout = new QVBoxLayout();
+
+    PaletteColour * colour = new PaletteColour(QColor(0, 0, 0));
+    activeColour = new PaletteColourWidget(this, colour);
+    connect(activeColour,	SIGNAL(selected(PaletteColour*)),
+            this,		SLOT  (selected(PaletteColour*)));
+
+    addColour->setMaximumSize(activeColour->size, activeColour->size);
+    connect(addColour,		SIGNAL(clicked()),
+            this,		SLOT  (addColour()));
+
+    activeRegionLayout->addWidget(addColour);
+    activeRegionLayout->addWidget(activeColour);
+
+    paletteLayout = new FlowLayout();
+    outerLayout   = new QFormLayout();
+
+    activeRegion->setLayout(activeRegionLayout);
+    paletteBox->setLayout(paletteLayout);
+    outerLayout->insertRow(0, activeRegion, paletteBox);
+    setLayout(outerLayout);
 }
 
 PaletteWidget::~PaletteWidget()
 {
-    for (int i = 0; i < swatch.size(); ++i) {
-        delete swatch.at(i);
-    }
+    emptySwatch();
 }
 
 void PaletteWidget::addColour()
 {
-    QColor new_colour = QColorDialog::getColor();
+    QColor newColour = QColorDialog::getColor();
     // send this to the palette instead
-    PaletteColour *colour = new PaletteColour(new_colour);
-    PaletteColourWidget* colour_widget = new PaletteColourWidget(this, colour);
-    swatch.append(colour_widget);
-    connect(colour_widget,	SIGNAL(selected(PaletteColour*)),
-            this,		SLOT(selected(PaletteColour*)));
-    outer_layout->addWidget(colour_widget);
-    emit selectedColour(colour);
+    PaletteColour *      colour       = new PaletteColour(newColour);
+    PaletteColourWidget* colourWidget = new PaletteColourWidget(this, colour);
+    swatch.append(colourWidget);
+    connect(colourWidget,	SIGNAL(selected(PaletteColour*)),
+            this,		SLOT  (selected(PaletteColour*)));
+    paletteLayout->addWidget(colourWidget);
+    emit colourSelected(colour);
 }
 
-void PaletteWidget::changeSwatch(Palette* palette_)
+void PaletteWidget::changeSwatch(Palette* newPalette)
 {
-    palette = palette_;
+    palette = newPalette;
+    emptySwatch();
+
     QVector<PaletteColour*> *colours = palette->getColours();
-    // do we need to explicitly delete them?
-
-    while (!swatch.isEmpty()) {
-        PaletteColourWidget*widget = swatch.back();
-        swatch.pop_back();
-        outer_layout->removeWidget(widget);
-        delete widget;
-    }
-
     // what if the size is more than a reasonable amount?
     for (int i = 0; i < colours->size(); ++i) {
-        PaletteColourWidget* colour_widget = new PaletteColourWidget(this, colours->at(i));
-        swatch.append(colour_widget);
-        connect(colour_widget,	SIGNAL(selected(PaletteColour*)),
-                this,		SLOT(selected(PaletteColour*)));
-        outer_layout->addWidget(colour_widget);
+        PaletteColourWidget* colourWidget = new PaletteColourWidget(this, colours->at(i));
+        swatch.append(colourWidget);
+        connect(colourWidget,	SIGNAL(selected(PaletteColour*)),
+                this,		SLOT  (selected(PaletteColour*)));
+        paletteLayout->addWidget(colourWidget);
+    }
+
+    if (!colours->isEmpty()) {
+        selected(colours->first());
+    }
+}
+
+void PaletteWidget::emptySwatch()
+{
+    while (!swatch.isEmpty()) {
+        PaletteColourWidget * widget = swatch.back();
+        swatch.pop_back();
+        paletteLayout->removeWidget(widget);
+        delete widget;
     }
 }
 
 void PaletteWidget::selected(PaletteColour* colour)
 {
-    emit selectedColour(colour);
+    activeColour->setPaletteColour(colour);
+    emit colourSelected(colour);
 }
