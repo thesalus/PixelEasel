@@ -344,6 +344,11 @@ void ImageDocument::setZoomInActiveView(int scale)
     ((ImageCanvas*) views.first())->setScale(scale);
 }
 
+void ImageDocument::setColour(PaletteColour * colour)
+{
+    setColour(colour->getRGBA());
+}
+
 void ImageDocument::setColour(QRgb colour)
 {
     m_pen_colour = colour;
@@ -353,15 +358,40 @@ void ImageDocument::setColour(QRgb colour)
         for (int i = 0; i < imageLayers.size(); ++i) {
             imageLayers.at(i)->setColorTable(colourTable);
         }
+        // there's a bug here with the initial colour
         palette->addColour(colour);
     }
 }
 
-void ImageDocument::setColour(PaletteColour* colour)
+void ImageDocument::changeColour(QRgb colour)
+{
+    int index = colourTable.indexOf(m_pen_colour.rgb());
+    if (index == -1) {
+        if (colourTable.indexOf(colour) > -1) { // delete existing entry to ensure no dupes
+            colourTable.erase(colourTable.begin() + colourTable.indexOf(colour));
+        }
+        colourTable.push_back(colour);
+    }
+    else {
+        colourTable[index] = colour;
+        for (int i = 0; i < imageLayers.size(); ++i) {
+            imageLayers.at(i)->swapColours(m_pen_colour.rgb(), colour);
+        }
+        // update each layer's images
+    }
+    for (int i = 0; i < imageLayers.size(); ++i) {
+        imageLayers.at(i)->setColorTable(colourTable);
+    }
+    m_pen_colour = colour;
+    m_pen.setColor(m_pen_colour);
+    this->makeChange();
+}
+
+void ImageDocument::changeColour(PaletteColour* colour)
 {
     // TODO: add if it does not exist in the colour table?
     //          then tell the PaletteWidget so that it may add it.
-    setColour(colour->getRGBA());
+    changeColour(colour->getRGBA());
 }
 
 bool ImageDocument::hasSelection()

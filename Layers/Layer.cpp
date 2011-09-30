@@ -24,3 +24,14 @@ QImage Layer::layOver (QImage bottomLayer)
 
     return bottomLayer;
 }
+
+void Layer::swapColours(QRgb oldColour, QRgb newColour)
+{
+    for (int x = 0; x < width(); x++) {
+        for (int y = 0; y < height(); y++) {
+            if (this->pixel(x,y) == oldColour) {
+                this->setPixel(x, y, newColour);
+            }
+        }
+    }
+}

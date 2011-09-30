@@ -328,8 +328,10 @@ void PixelEasel::createDocks()
     paletteDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
     addDockWidget(Qt::BottomDockWidgetArea, paletteDock);
     paletteView = new PaletteWidget(this);
-    connect(paletteView,   SIGNAL(colourSelected(PaletteColour*)),
-            this,           SLOT(setColour(PaletteColour*)));
+    connect(paletteView,    SIGNAL(colourSelected(PaletteColour*)),
+            this,           SLOT  (setColour(PaletteColour*)));
+    connect(paletteView,    SIGNAL(colourChanged(PaletteColour*)),
+            this,	    SLOT  (updateChangedColour(PaletteColour*)));
     paletteDock->setWidget(paletteView);
 
     viewDock = new QDockWidget(tr("View"), this);
@@ -423,6 +425,13 @@ void PixelEasel::updateContext(QMdiSubWindow* window)
         document->refreshScratchpad();
         paletteView->changeSwatch(document->getPalette());
         zoomWidget->setValue(document->getZoomInActiveView());
+    }
+}
+
+void PixelEasel::updateChangedColour(PaletteColour * colour)
+{
+    if (activeDocument() != NULL) {
+        activeDocument()->changeColour(colour);
     }
 }
 

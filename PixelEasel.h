@@ -51,6 +51,7 @@ private slots:
     void updateActions();
     void updateEditActions(bool);
     void updateContext(QMdiSubWindow*);
+    void updateChangedColour(PaletteColour*);
     void updateSave(bool);
 
     void setTool(int);

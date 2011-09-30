@@ -12,6 +12,7 @@ public:
     Layer (const QSize & size, QImage::Format format);
 
     QImage layOver (QImage bottomLayer);
+    void swapColours(QRgb oldColour, QRgb newColour);
 };
 
 #endif // LAYER_H

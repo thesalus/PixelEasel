@@ -56,6 +56,8 @@ public:
     void            setZoomInActiveView(int);
     void            setColour(PaletteColour*);
     void            setColour(QRgb colour);
+    void            changeColour(PaletteColour*);
+    void            changeColour(QRgb colour);
     void            translateSelection(QPoint point);
     void            selectToScratchpad();
 

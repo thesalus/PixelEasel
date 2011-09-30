@@ -29,6 +29,7 @@ private:
     void emptySwatch();
 
 signals:
+    void colourChanged(PaletteColour*);
     void colourSelected(PaletteColour*);
 
 public slots:

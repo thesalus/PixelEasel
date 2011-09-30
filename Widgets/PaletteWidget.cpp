@@ -92,10 +92,19 @@ void PaletteWidget::selected(PaletteColourWidget* widget)
 {
     if (widget != activeColourDisplay) {
         activeColourDisplay->setPaletteColour(widget->getPaletteColour());
+        if (selectedColour == widget) {
+            // if the active colour has been changed
+            emit colourChanged(widget->getPaletteColour());
+        }
+        else {
+            // otherwise we are just swapping things
+            emit colourSelected(widget->getPaletteColour());
+        }
         selectedColour = widget;
     }
     else {
+        // changes the colour on the active widget
         selectedColour->setPaletteColour(widget->getPaletteColour());
+        emit colourChanged(widget->getPaletteColour());
     }
-    emit colourSelected(widget->getPaletteColour());
 }
