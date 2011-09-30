@@ -23,7 +23,8 @@ private:
     FlowLayout  * paletteLayout;
 
     Palette     * palette;
-    PaletteColourWidget * activeColour;
+    PaletteColourWidget * activeColourDisplay;
+    PaletteColourWidget * selectedColour;
 
     void emptySwatch();
 
@@ -32,7 +33,7 @@ signals:
 
 public slots:
     void addColour();
-    void selected(PaletteColour*);
+    void selected(PaletteColourWidget*);
 };
 
 #endif // PALETTEWIDGET_H

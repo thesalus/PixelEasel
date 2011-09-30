@@ -140,7 +140,7 @@ void PixelEasel::selectAll()
 {
     ImageDocument *document = activeDocument();
     if (document != 0) {
-        document->setSelection(QRect(QPoint(0,0),doc->getSize()));
+        document->setSelection(QRect(QPoint(0,0),document->getSize()));
         setTool((int)Tool::SelectTool);
         hotkeys->setTool((int) Tool::SelectTool);
     }
@@ -412,7 +412,7 @@ void PixelEasel::setupContext(ImageDocument* imageDocument)
 
 void PixelEasel::updateContext(QMdiSubWindow* window)
 {
-    if (window != 0 && old_window != window) {
+    if (window != 0 && oldWindow != window) {
         oldWindow = window;    // avoid repeated, unnecessary updates
         ImageDocument* document = (ImageDocument*) window;
         undoGroup->setActiveStack(document->getUndoStack());

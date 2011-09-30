@@ -12,6 +12,7 @@ public:
 
     explicit PaletteColourWidget(QWidget *parent, PaletteColour* colour);
     void setPaletteColour(PaletteColour * colour);
+    PaletteColour * getPaletteColour();
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);
@@ -23,7 +24,7 @@ private:
     PaletteColour* colour;
 
 signals:
-    void selected(PaletteColour*);
+    void selected(PaletteColourWidget*);
 
 public slots:
 

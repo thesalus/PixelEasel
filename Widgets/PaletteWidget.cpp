@@ -6,8 +6,9 @@
 #include "PaletteColour.h"
 #include "PaletteWidget.h"
 
-PaletteWidget::PaletteWidget(QWidget *parent) :
-    QFrame(parent)
+PaletteWidget::PaletteWidget(QWidget *parent)
+    : QFrame(parent)
+    , selectedColour(NULL)
 {
     QPushButton* addColour = new QPushButton("+");
 
@@ -17,18 +18,18 @@ PaletteWidget::PaletteWidget(QWidget *parent) :
     QVBoxLayout* activeRegionLayout = new QVBoxLayout();
 
     PaletteColour * colour = new PaletteColour(QColor(0, 0, 0));
-    activeColour = new PaletteColourWidget(this, colour);
-    connect(activeColour,	SIGNAL(selected(PaletteColour*)),
-            this,		SLOT  (selected(PaletteColour*)));
+    activeColourDisplay = new PaletteColourWidget(this, colour);
+    connect(activeColourDisplay,SIGNAL(selected(PaletteColourWidget*)),
+            this,		SLOT  (selected(PaletteColourWidget*)));
 
-    addColour->setMaximumSize(activeColour->size, activeColour->size);
+    addColour->setMaximumSize(activeColourDisplay->size, activeColourDisplay->size);
     connect(addColour,		SIGNAL(clicked()),
             this,		SLOT  (addColour()));
 
     activeRegionLayout->addWidget(addColour);
-    activeRegionLayout->addWidget(activeColour);
+    activeRegionLayout->addWidget(activeColourDisplay);
 
-    paletteLayout = new FlowLayout();
+    paletteLayout = new FlowLayout(1,1,1);
     outerLayout   = new QFormLayout();
 
     activeRegion->setLayout(activeRegionLayout);
@@ -45,12 +46,15 @@ PaletteWidget::~PaletteWidget()
 void PaletteWidget::addColour()
 {
     QColor newColour = QColorDialog::getColor();
+    if (!newColour.isValid()) {
+        return;
+    }
     // send this to the palette instead
     PaletteColour *      colour       = new PaletteColour(newColour);
     PaletteColourWidget* colourWidget = new PaletteColourWidget(this, colour);
     swatch.append(colourWidget);
-    connect(colourWidget,	SIGNAL(selected(PaletteColour*)),
-            this,		SLOT  (selected(PaletteColour*)));
+    connect(colourWidget,	SIGNAL(selected(PaletteColourWidget*)),
+            this,		SLOT  (selected(PaletteColourWidget*)));
     paletteLayout->addWidget(colourWidget);
     emit colourSelected(colour);
 }
@@ -65,13 +69,12 @@ void PaletteWidget::changeSwatch(Palette* newPalette)
     for (int i = 0; i < colours->size(); ++i) {
         PaletteColourWidget* colourWidget = new PaletteColourWidget(this, colours->at(i));
         swatch.append(colourWidget);
-        connect(colourWidget,	SIGNAL(selected(PaletteColour*)),
-                this,		SLOT  (selected(PaletteColour*)));
+        connect(colourWidget,	SIGNAL(selected(PaletteColourWidget*)),
+                this,		SLOT  (selected(PaletteColourWidget*)));
         paletteLayout->addWidget(colourWidget);
-    }
-
-    if (!colours->isEmpty()) {
-        selected(colours->first());
+        if (i == 0)  {
+            selected(colourWidget);
+        }
     }
 }
 
@@ -85,8 +88,14 @@ void PaletteWidget::emptySwatch()
     }
 }
 
-void PaletteWidget::selected(PaletteColour* colour)
+void PaletteWidget::selected(PaletteColourWidget* widget)
 {
-    activeColour->setPaletteColour(colour);
-    emit colourSelected(colour);
+    if (widget != activeColourDisplay) {
+        activeColourDisplay->setPaletteColour(widget->getPaletteColour());
+        selectedColour = widget;
+    }
+    else {
+        selectedColour->setPaletteColour(widget->getPaletteColour());
+    }
+    emit colourSelected(widget->getPaletteColour());
 }
