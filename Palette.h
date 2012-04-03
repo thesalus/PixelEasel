@@ -10,14 +10,21 @@ class Palette
 public:
     Palette();
     ~Palette();
+
     void addColour(QRgb);
-    QVector<PaletteColour*>*    getColours();
-    QVector<QRgb> getColourTable() const { return colourTable; }
     void swapColours(QRgb originalColour, QRgb nextColour);
 
+    QVector<PaletteColour*>* getColours()  { return &colours; }
+    QVector<QRgb> getColourTable() const { return colourTable; }
+
+    void setActiveColour(QRgb);
+    QRgb getActiveColour();
+
 private:
-    QVector<PaletteColour*>     colours;
+    QVector<PaletteColour*> colours;
     QVector<QRgb> colourTable;
+
+    int activeIndex;
 };
 
 #endif // PALETTE_H

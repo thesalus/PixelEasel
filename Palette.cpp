@@ -2,17 +2,13 @@
 #include <QtAlgorithms>
 
 Palette::Palette()
+    : activeIndex(0)
 {
 }
 
 Palette::~Palette()
 {
     qDeleteAll(colours);
-}
-
-QVector<PaletteColour*>* Palette::getColours()
-{
-    return &colours;
 }
 
 void Palette::addColour(QRgb colour)
@@ -25,7 +21,8 @@ void Palette::addColour(QRgb colour)
 
 void Palette::swapColours(QRgb originalColour, QRgb newColour)
 {
-    // TODO: update the palette widget
+    // TODO: update the palette widget. Perhaps make this a distinct entity
+    //       and wire it with signals.
     int index = colourTable.indexOf(originalColour);
     if (index == -1) {
         addColour(newColour);
@@ -33,4 +30,18 @@ void Palette::swapColours(QRgb originalColour, QRgb newColour)
         colourTable[index] = newColour;
         colours[index] = new PaletteColour(newColour);
     }
+}
+
+void Palette::setActiveColour(QRgb colour)
+{
+    int index = colourTable.indexOf(colour);
+    if (index == -1) {
+        addColour(colour);
+        index = colourTable.indexOf(colour);
+    }
+    activeIndex = index;
+}
+
+QRgb Palette::getActiveColour() {
+    return colourTable[activeIndex];
 }

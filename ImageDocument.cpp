@@ -32,7 +32,7 @@ ImageDocument::ImageDocument(QString new_fileName)
         isSelectionChanged(false),
         isScratchpadSelectionEmpty(true),
         imageIndex(0),
-	scratchpad(QSize(1,1), QImage::Format_ARGB32),
+        scratchpad(QSize(1,1), QImage::Format_ARGB32),
         undoStack(NULL),
         preview(NULL),
         palette(new Palette)
@@ -73,14 +73,15 @@ void ImageDocument::initialize()
     scrollArea->setStyleSheet("QLabel { background-color: #999999 }");
     scrollArea->setWidget(canvas);
 
+    palette->setActiveColour(Qt::black);
+    m_pen = QPen(Qt::black, m_pen_width,
+                 Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     m_pen_width = 1;
-    active_colour = Qt::black;
-    m_pen = QPen(active_colour, m_pen_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 
     initializeColourTable();
     preview = new ImagePreview(this);
-    connect(this,	    SIGNAL(imageModified(const QImage&)),
-            preview,	    SLOT(refreshImage(const QImage&)));
+    connect(this,       SIGNAL(imageModified(const QImage&)),
+            preview,    SLOT(refreshImage(const QImage&)));
 
     this->setWidget(scrollArea);
     this->setWindowTitle(fileName.split("/").last());
@@ -336,11 +337,9 @@ void ImageDocument::setZoomInActiveView(int scale)
 
 void ImageDocument::setColour(QRgb colour)
 {
-    active_colour = colour;
-    m_pen.setColor(colour);
-
     // TODO: there's a bug here with the initial colour.
-    palette->addColour(colour);
+    palette->setActiveColour(colour);
+    m_pen.setColor(colour);
     for (int i = 0; i < imageLayers.size(); ++i) {
         imageLayers.at(i)->setColorTable(palette->getColourTable());
     }
@@ -348,15 +347,15 @@ void ImageDocument::setColour(QRgb colour)
 
 void ImageDocument::changeColour(QRgb colour)
 {
-    if (active_colour.rgb() != colour) {
-        swapColours(active_colour.rgb(), colour);
+    QRgb active_colour = palette->getActiveColour();
+    if (active_colour != colour) {
+        swapColours(active_colour, colour);
         if (undoStack != NULL) {
-            PaletteSwapCommand * command = new PaletteSwapCommand(active_colour.rgb(), colour, this);
+            PaletteSwapCommand * command = new PaletteSwapCommand(active_colour, colour, this);
             command->setText("Change Palette Colour");
             undoStack->push(command);
         }
     }
-    active_colour = colour;
     m_pen.setColor(active_colour);
 }
 

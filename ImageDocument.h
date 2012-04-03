@@ -98,7 +98,6 @@ private:
 
     QPen m_pen;
     int	m_pen_width;
-    QColor active_colour;
 
     void            clearRect(QRect rect);
     void	    makeChange();   // make change, and refresh image
