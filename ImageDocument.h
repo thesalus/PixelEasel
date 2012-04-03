@@ -54,10 +54,11 @@ public:
     bool            hasSelection();
     void            setToolInActiveView(Tool::ToolTypes);
     void            setZoomInActiveView(int);
-    void            setColour(PaletteColour*);
-    void            setColour(QRgb colour);
-    void            changeColour(PaletteColour*);
-    void            changeColour(QRgb colour);
+    void setColour(PaletteColour* c) { setColour(c->getRGBA()); }
+    void setColour(QRgb colour);
+    void changeColour(PaletteColour* c) { changeColour(c->getRGBA()); }
+    void changeColour(QRgb colour);
+    void swapColours(QRgb originalColour, QRgb newColour);
     void            translateSelection(QPoint point);
     void            selectToScratchpad();
 
@@ -92,18 +93,17 @@ private:
     QImage          preScratch;
     QPoint          scratchpadTranslation;
     ImagePreview   *preview;
-    Palette        *palette;
-    QVector<QRgb>   colourTable;
 
-    QPen            m_pen;
-    int		    m_pen_width;
-    QColor	    m_pen_colour;
+    Palette* palette;
+
+    QPen m_pen;
+    int	m_pen_width;
+    QColor active_colour;
 
     void            clearRect(QRect rect);
     void	    makeChange();   // make change, and refresh image
     void	    initialize();
-    void            initializeColourTable();
-    void            addColourToTable(QRgb key, QHash<QRgb, int> & colourHash);
+    void initializeColourTable();
 };
 
 #endif // IMAGEDOCUMENT_H

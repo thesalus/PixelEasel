@@ -2,6 +2,7 @@
 #include "Commands.h"
 #include <QFileDialog>
 #include <QDir>
+#include <iostream>
 
 int ImageDocument::c_untitled_documents = 0;
 
@@ -11,7 +12,7 @@ ImageDocument::ImageDocument(QSize size)
         isSelectionChanged(false),
         isScratchpadSelectionEmpty(true),
         imageIndex(0),
-	scratchpad(size, QImage::Format_ARGB32),
+        scratchpad(size, QImage::Format_ARGB32),
         undoStack(NULL),
         preview(NULL),
         palette(new Palette)
@@ -73,8 +74,8 @@ void ImageDocument::initialize()
     scrollArea->setWidget(canvas);
 
     m_pen_width = 1;
-    m_pen_colour = Qt::black;
-    m_pen = QPen(m_pen_colour, m_pen_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    active_colour = Qt::black;
+    m_pen = QPen(active_colour, m_pen_width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 
     initializeColourTable();
     preview = new ImagePreview(this);
@@ -91,28 +92,17 @@ void ImageDocument::initialize()
 void ImageDocument::initializeColourTable()
 {
     // grab all the colours from each layer and put it in the palette
-    QHash<QRgb, int>     colour_hash;
     for (int i = 0; i < imageLayers.size(); ++i) {
         Layer *image = imageLayers.at(i);
         for (int x = 0; x < image->width(); x++) {
             for (int y = 0; y < image->height(); y++) {
-                QRgb key = image->pixel(x,y);
-                addColourToTable(key, colour_hash);
+                QRgb colour = image->pixel(x,y);
+                palette->addColour(colour);
             }
         }
     }
     for (int i = 0; i < imageLayers.size(); ++i) {
-        imageLayers.at(i)->setColorTable(colourTable);
-    }
-}
-
-void ImageDocument::addColourToTable(QRgb key, QHash<QRgb, int> & colourHash)
-{
-    bool isNewColour = key != Qt::transparent && colourHash.value(key, 0) == 0;
-    if (isNewColour) {
-        colourTable.push_back(key);
-        colourHash[key] = 1;
-        palette->addColour(key);
+        imageLayers.at(i)->setColorTable(palette->getColourTable());
     }
 }
 
@@ -344,54 +334,43 @@ void ImageDocument::setZoomInActiveView(int scale)
     ((ImageCanvas*) views.first())->setScale(scale);
 }
 
-void ImageDocument::setColour(PaletteColour * colour)
-{
-    setColour(colour->getRGBA());
-}
-
 void ImageDocument::setColour(QRgb colour)
 {
-    m_pen_colour = colour;
-    m_pen.setColor(m_pen_colour);
-    if (colourTable.indexOf(colour) == -1) {
-        colourTable.push_back(colour);
-        for (int i = 0; i < imageLayers.size(); ++i) {
-            imageLayers.at(i)->setColorTable(colourTable);
-        }
-        // there's a bug here with the initial colour
-        palette->addColour(colour);
+    active_colour = colour;
+    m_pen.setColor(colour);
+
+    // TODO: there's a bug here with the initial colour.
+    palette->addColour(colour);
+    for (int i = 0; i < imageLayers.size(); ++i) {
+        imageLayers.at(i)->setColorTable(palette->getColourTable());
     }
 }
 
 void ImageDocument::changeColour(QRgb colour)
 {
-    int index = colourTable.indexOf(m_pen_colour.rgb());
-    if (index == -1) {
-        if (colourTable.indexOf(colour) > -1) { // delete existing entry to ensure no dupes
-            colourTable.erase(colourTable.begin() + colourTable.indexOf(colour));
+    if (active_colour.rgb() != colour) {
+        swapColours(active_colour.rgb(), colour);
+        if (undoStack != NULL) {
+            PaletteSwapCommand * command = new PaletteSwapCommand(active_colour.rgb(), colour, this);
+            command->setText("Change Palette Colour");
+            undoStack->push(command);
         }
-        colourTable.push_back(colour);
     }
-    else {
-        colourTable[index] = colour;
-        for (int i = 0; i < imageLayers.size(); ++i) {
-            imageLayers.at(i)->swapColours(m_pen_colour.rgb(), colour);
-        }
-        // update each layer's images
-    }
-    for (int i = 0; i < imageLayers.size(); ++i) {
-        imageLayers.at(i)->setColorTable(colourTable);
-    }
-    m_pen_colour = colour;
-    m_pen.setColor(m_pen_colour);
-    this->makeChange();
+    active_colour = colour;
+    m_pen.setColor(active_colour);
 }
 
-void ImageDocument::changeColour(PaletteColour* colour)
+void ImageDocument::swapColours(QRgb originalColour, QRgb newColour)
 {
-    // TODO: add if it does not exist in the colour table?
-    //          then tell the PaletteWidget so that it may add it.
-    changeColour(colour->getRGBA());
+    palette->swapColours(originalColour, newColour);
+
+    if (originalColour != newColour) {
+        for (int i = 0; i < imageLayers.size(); ++i) {
+            imageLayers.at(i)->swapColours(originalColour, newColour);
+            imageLayers.at(i)->setColorTable(palette->getColourTable());
+        }
+        this->makeChange();
+    }
 }
 
 bool ImageDocument::hasSelection()

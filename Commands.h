@@ -1,8 +1,9 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-#include <QUndoCommand>
 #include <QImage>
+#include <QRgb>
+#include <QUndoCommand>
 #include "ImageDocument.h"
 
 class AddCommand : public QUndoCommand
@@ -14,6 +15,18 @@ public:
 private:
     QImage oldImage;
     QImage newImage;
+    ImageDocument *document;
+};
+
+class PaletteSwapCommand : public QUndoCommand
+{
+public:
+    PaletteSwapCommand(QRgb original, QRgb replacement, ImageDocument * document);
+    void redo();
+    void undo();
+private:
+    QRgb oldColour;
+    QRgb newColour;
     ImageDocument *document;
 };
 

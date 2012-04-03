@@ -12,9 +12,12 @@ public:
     ~Palette();
     void addColour(QRgb);
     QVector<PaletteColour*>*    getColours();
+    QVector<QRgb> getColourTable() const { return colourTable; }
+    void swapColours(QRgb originalColour, QRgb nextColour);
 
 private:
     QVector<PaletteColour*>     colours;
+    QVector<QRgb> colourTable;
 };
 
 #endif // PALETTE_H

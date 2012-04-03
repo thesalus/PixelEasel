@@ -27,6 +27,9 @@ QImage Layer::layOver (QImage bottomLayer)
 
 void Layer::swapColours(QRgb oldColour, QRgb newColour)
 {
+    if (oldColour == newColour) {
+        return;
+    }
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
             if (this->pixel(x,y) == oldColour) {

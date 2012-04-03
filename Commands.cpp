@@ -16,3 +16,20 @@ void AddCommand::undo()
 {
     this->document->replaceImage(this->oldImage);
 }
+
+PaletteSwapCommand::PaletteSwapCommand(QRgb original, QRgb replacement, ImageDocument * document_)
+    : oldColour(original)
+    , newColour(replacement)
+    , document(document_)
+{
+}
+
+void PaletteSwapCommand::redo()
+{
+    this->document->swapColours(oldColour, newColour);
+}
+
+void PaletteSwapCommand::undo()
+{
+    this->document->swapColours(newColour, oldColour);
+}
